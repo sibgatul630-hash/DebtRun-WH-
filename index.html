@@ -1,172 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sibgat F1 Hub</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Fan Hub</title>
   <style>
+    :root {
+      --primary: #e10600;
+      --bg: #0b0b0f;
+      --card: #15151c;
+      --text: #ffffff;
+      --muted: #b0b0b0;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", sans-serif;
     }
 
     body {
-      background: #0a0f1f;
-      color: white;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
     }
 
-    /* HERO SECTION */
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,0.9);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      border-bottom: 1px solid #222;
+    }
+
+    nav a {
+      color: var(--text);
+      margin-left: 20px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
     .hero {
-      height: 100vh;
+      height: 90vh;
+      background: url('https://images.unsplash.com/photo-1503376780353-7e6692767b70') center/cover no-repeat;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      background: radial-gradient(circle at center, #1a1f3a, #0a0f1f);
       padding: 20px;
     }
 
     .hero h1 {
-      font-size: 64px;
-      background: linear-gradient(90deg, #ff0000, #ff6b6b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 3rem;
     }
 
     .hero p {
-      margin-top: 20px;
-      font-size: 20px;
-      color: #aaa;
-      max-width: 600px;
+      margin: 15px 0;
+      color: var(--muted);
     }
 
     .btn {
-      margin-top: 30px;
-      padding: 12px 25px;
-      background: #e10600;
+      background: var(--primary);
+      padding: 10px 20px;
       border: none;
       color: white;
-      font-size: 16px;
-      border-radius: 6px;
       cursor: pointer;
-      transition: 0.3s;
+      border-radius: 5px;
     }
 
-    .btn:hover {
-      background: #ff2a1a;
-      transform: scale(1.05);
+    section {
+      padding: 60px 30px;
     }
 
-    /* SECTIONS */
-    .section {
-      padding: 80px 10%;
-      text-align: center;
+    h2 {
+      margin-bottom: 20px;
+      border-left: 4px solid var(--primary);
+      padding-left: 10px;
     }
 
-    .section h2 {
-      font-size: 36px;
-      margin-bottom: 40px;
-    }
-
-    .cards {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
 
     .card {
-      background: #111827;
-      padding: 25px;
-      border-radius: 12px;
-      width: 300px;
-      transition: 0.3s;
+      background: var(--card);
+      padding: 15px;
+      border-radius: 10px;
+      transition: transform 0.3s;
     }
 
     .card:hover {
-      transform: translateY(-10px);
+      transform: translateY(-5px);
     }
 
-    .card h3 {
+    .card img {
+      width: 100%;
+      border-radius: 8px;
       margin-bottom: 10px;
-      color: #e10600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+    }
+
+    th {
+      background: #1f1f2a;
     }
 
     footer {
       text-align: center;
       padding: 20px;
-      background: black;
-      color: #777;
+      border-top: 1px solid #222;
+      color: var(--muted);
     }
-
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 40px;
-      }
-
-      .section {
-        padding: 50px 20px;
-      }
-
-      .cards {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-
   </style>
 </head>
-
 <body>
 
-  <!-- HERO -->
-  <section class="hero">
-    <h1>Sibgat F1 Hub 🏎️</h1>
-    <p>
-      A high-performance F1 themed website inspired by speed, design, and engineering excellence.
-    </p>
-    <button class="btn">Explore</button>
-  </section>
+<header>
+  <h3 style="color:var(--primary)">F1 Fan Hub</h3>
+  <nav>
+    <a href="#teams">Teams</a>
+    <a href="#drivers">Drivers</a>
+    <a href="#standings">Standings</a>
+    <a href="#calendar">Calendar</a>
+  </nav>
+</header>
 
-  <!-- TEAMS -->
-  <section class="section">
-    <h2>Top Teams</h2>
+<section class="hero">
+  <h1>Formula 1 Fan Experience</h1>
+  <p>Live-inspired dashboard for F1 enthusiasts</p>
+  <button class="btn">Explore</button>
+</section>
 
-    <div class="cards">
-      <div class="card">
-        <h3>Red Bull</h3>
-        <p>Dominating performance and cutting-edge aerodynamics.</p>
-      </div>
-
-      <div class="card">
-        <h3>Mercedes</h3>
-        <p>Precision engineering and hybrid power excellence.</p>
-      </div>
-
-      <div class="card">
-        <h3>Ferrari</h3>
-        <p>Iconic legacy with passion and racing heritage.</p>
-      </div>
+<section id="teams">
+  <h2>Teams</h2>
+  <div class="grid">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1549924231-f129b911e442" />
+      <h3>Red Bull Racing</h3>
+      <p>Top-performing team with championship dominance.</p>
     </div>
-  </section>
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1502877338535-766e1452684a" />
+      <h3>Ferrari</h3>
+      <p>Historic Italian team with rich legacy.</p>
+    </div>
+  </div>
+</section>
 
-  <!-- ABOUT -->
-  <section class="section">
-    <h2>About</h2>
-    <p style="max-width:700px; margin:auto; color:#aaa;">
-      This website is a personal F1-themed project showcasing design, layout, and web development skills.
-      Built for learning and creativity.
-    </p>
-  </section>
+<section id="drivers">
+  <h2>Drivers</h2>
+  <div class="grid">
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c" />
+      <h3>Max Verstappen</h3>
+      <p>Red Bull Racing</p>
+    </div>
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1520975916090-3105956dac38" />
+      <h3>Lewis Hamilton</h3>
+      <p>Mercedes</p>
+    </div>
+  </div>
+</section>
 
-  <footer>
-    <p>© 2026 Sibgat F1 Hub</p>
-  </footer>
+<section id="standings">
+  <h2>Driver Standings</h2>
+  <table>
+    <tr><th>Pos</th><th>Name</th><th>Team</th><th>Points</th></tr>
+    <tr><td>1</td><td>Max Verstappen</td><td>Red Bull</td><td>400</td></tr>
+    <tr><td>2</td><td>Lewis Hamilton</td><td>Mercedes</td><td>320</td></tr>
+  </table>
+</section>
+
+<section id="calendar">
+  <h2>Race Calendar</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Monaco GP</h3>
+      <p>Monte Carlo</p>
+      <p>May 25</p>
+    </div>
+    <div class="card">
+      <h3>British GP</h3>
+      <p>Silverstone</p>
+      <p>July 6</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 F1 Fan Hub</p>
+</footer>
 
 </body>
 </html>
