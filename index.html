@@ -1,590 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Formula 1 Hub | Official Fan Platform</title>
-  <!-- Google Fonts: Modern & Readable -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 (free icons) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <title>F1 Mini Game</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      background-color: #0a0c12;
-      font-family: 'Inter', sans-serif;
-      color: #eef2ff;
-      line-height: 1.5;
-      scroll-behavior: smooth;
-    }
-
-    /* Typography */
-    h1, h2, h3, h4, .heading-font {
-      font-family: 'Rajdhani', 'Inter', sans-serif;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    h1 {
-      font-size: 2.8rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #ffffff 0%, #e10600 80%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    h2 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      border-left: 5px solid #e10600;
-      padding-left: 1rem;
-    }
-
-    h3 {
-      font-size: 1.4rem;
-      font-weight: 600;
-    }
-
-    body, p, a, li, td, .text-body {
-      font-family: 'Inter', sans-serif;
-      font-weight: 400;
-      font-size: 1rem;
-    }
-
-    /* Container & Layout */
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-
-    /* Header / Nav */
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      padding: 1.5rem 0;
-      border-bottom: 1px solid rgba(225, 6, 0, 0.3);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo i {
-      font-size: 2rem;
-      color: #e10600;
-    }
-
-    .logo span {
-      font-size: 1.8rem;
-      font-weight: 800;
-      font-family: 'Rajdhani', sans-serif;
-      letter-spacing: -0.5px;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-      list-style: none;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: #eef2ff;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-
-    .nav-links a:hover {
-      color: #e10600;
-    }
-
-    /* Hero Section with realistic racing imagery */
-    .hero {
-      margin: 2rem 0 3rem 0;
-      border-radius: 32px;
-      overflow: hidden;
-      position: relative;
-      height: 420px;
-      box-shadow: 0 25px 35px -12px rgba(0,0,0,0.5);
-    }
-
-    .hero-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 30%;
-      transition: transform 0.5s ease;
-    }
-
-    .hero:hover .hero-img {
-      transform: scale(1.02);
-    }
-
-    .hero-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(0deg, #0a0c12 0%, transparent 100%);
-      padding: 2.5rem;
-    }
-
-    .hero-overlay h1 {
-      font-size: 3.2rem;
-    }
-
-    .hero-overlay p {
-      font-size: 1.2rem;
-      max-width: 550px;
-      margin-top: 0.5rem;
-    }
-
-    /* Card Grid System */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.8rem;
-      margin-bottom: 3rem;
-    }
-
-    .card {
-      background: #12141c;
-      border-radius: 24px;
-      overflow: hidden;
-      transition: all 0.25s ease;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 20px 30px -12px rgba(225, 6, 0, 0.25);
-      border-color: rgba(225, 6, 0, 0.4);
-    }
-
-    .card-img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .card-content {
-      padding: 1.5rem;
-    }
-
-    .card-content h3 {
-      margin-bottom: 0.5rem;
-    }
-
-    .card-content p {
-      color: #b0b7d0;
-      font-size: 0.9rem;
-    }
-
-    /* Tables (clean standings) */
-    .standings-section {
-      margin-bottom: 3rem;
-    }
-
-    .table-wrapper {
-      overflow-x: auto;
-      background: #12141c;
-      border-radius: 24px;
-      padding: 0.2rem;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-
-    th {
-      text-align: left;
-      padding: 1.2rem 1rem;
-      background: #1a1d2b;
-      color: #e10600;
-      font-weight: 700;
-      font-family: 'Rajdhani', sans-serif;
-    }
-
-    td {
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    tr:hover td {
-      background: rgba(225, 6, 0, 0.05);
-    }
-
-    .position {
-      font-weight: 700;
-      color: #e10600;
-    }
-
-    /* Two column for tables */
-    .standings-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    /* Footer */
-    footer {
-      margin-top: 4rem;
-      padding: 2rem 0;
-      border-top: 1px solid rgba(225, 6, 0, 0.2);
+      margin: 0;
+      background: #0b0b0f;
+      color: white;
       text-align: center;
-      color: #7f8aa8;
+      font-family: Arial;
     }
 
-    /* Responsive */
-    @media (max-width: 1024px) {
-      .container {
-        padding: 0 1.5rem;
-      }
-      .hero {
-        height: 360px;
-      }
-      .hero-overlay h1 {
-        font-size: 2.2rem;
-      }
+    #track {
+      position: relative;
+      width: 300px;
+      height: 500px;
+      margin: 20px auto;
+      background: #222;
+      overflow: hidden;
+      border: 2px solid red;
     }
 
-    @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      .nav-links {
-        gap: 1.2rem;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .standings-row {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-      h2 {
-        font-size: 1.5rem;
-      }
-      .hero {
-        height: 280px;
-      }
-      .hero-overlay h1 {
-        font-size: 1.8rem;
-      }
-      .card-grid {
-        gap: 1.2rem;
-      }
+    #car {
+      position: absolute;
+      bottom: 20px;
+      left: 130px;
+      width: 40px;
+      height: 70px;
+      background: red;
+      border-radius: 10px;
     }
 
-    @media (max-width: 480px) {
-      .container {
-        padding: 0 1rem;
-      }
-      .hero-overlay p {
-        font-size: 0.9rem;
-      }
-      th, td {
-        padding: 0.8rem 0.6rem;
-        font-size: 0.8rem;
-      }
-    }
-
-    /* Button */
-    .btn-ghost {
-      display: inline-block;
-      margin-top: 1rem;
-      color: #e10600;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-    .btn-ghost i {
-      transition: transform 0.2s;
-    }
-    .btn-ghost:hover i {
-      transform: translateX(4px);
-    }
-
-    /* gradient accents */
-    .accent-glow {
-      background: radial-gradient(circle at 20% 30%, rgba(225,6,0,0.1), transparent);
+    button {
+      padding: 10px 15px;
+      margin: 5px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Navigation -->
-    <nav class="navbar">
-      <div class="logo">
-        <i class="fas fa-flag-checkered"></i>
-        <span>F1 HUB</span>
-      </div>
-      <ul class="nav-links">
-        <li><a href="#">Racing</a></li>
-        <li><a href="#">Teams</a></li>
-        <li><a href="#">Drivers</a></li>
-        <li><a href="#">Standings</a></li>
-        <li><a href="#">News</a></li>
-      </ul>
-    </nav>
 
-    <!-- Hero with realistic F1 image (Unsplash style, F1 car on track) -->
-    <div class="hero">
-      <img class="hero-img" src="https://www.topgear.com/sites/default/files/images/gallery-migration/2012-11/817E5276-EE32-4FA0-87B2-E5DC9027E8A0.jpg" alt="Formula 1 car racing on track" loading="lazy">
-      <div class="hero-overlay">
-        <h1>Relentless Speed. <br>Unrivaled Passion.</h1>
-        <p>The official fan hub for standings, teams, drivers and breaking news from the grid.</p>
-      </div>
-    </div>
+<h2>🏎️ F1 Mini Game</h2>
 
-    <!-- News Section (cards) -->
-    <section style="margin-bottom: 3rem;">
-      <h2><i class="fas fa-newspaper" style="margin-right: 12px; color:#e10600;"></i> Latest News</h2>
-      <div class="card-grid" id="newsGrid">
-        <!-- JS will inject dynamic news cards with realistic images -->
-      </div>
-    </section>
+<div id="track">
+  <div id="car"></div>
+</div>
 
-    <!-- Teams Section (card-based design) -->
-    <section style="margin-bottom: 3rem;">
-      <h2><i class="fas fa-helmet-safety" style="margin-right: 12px; color:#e10600;"></i> Constructors</h2>
-      <div class="card-grid" id="teamsGrid"></div>
-    </section>
+<button onclick="moveLeft()">⬅ Left</button>
+<button onclick="moveRight()">Right ➡</button>
 
-    <!-- Drivers Section (cards) -->
-    <section style="margin-bottom: 3rem;">
-      <h2><i class="fas fa-user-astronaut" style="margin-right: 12px; color:#e10600;"></i> Top Drivers</h2>
-      <div class="card-grid" id="driversGrid"></div>
-    </section>
+<script>
+  let car = document.getElementById("car");
+  let position = 130;
 
-    <!-- Standings: Driver + Constructor Tables -->
-    <div class="standings-row">
-      <div class="standings-section">
-        <h2><i class="fas fa-trophy" style="margin-right: 12px; color:#e10600;"></i> Driver Standings</h2>
-        <div class="table-wrapper">
-          <table id="driverStandingsTable">
-            <thead>
-              <tr><th>Pos</th><th>Driver</th><th>Nationality</th><th>Team</th><th>Points</th></tr>
-            </thead>
-            <tbody>
-              <!-- dynamic JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="standings-section">
-        <h2><i class="fas fa-building" style="margin-right: 12px; color:#e10600;"></i> Constructor Standings</h2>
-        <div class="table-wrapper">
-          <table id="constructorStandingsTable">
-            <thead><tr><th>Pos</th><th>Team</th><th>Points</th><th>Wins</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <footer>
-      <p>© 2025 Formula 1 Fan Hub — unofficial fan platform for the love of racing. All imagery used for illustrative purposes.</p>
-      <p style="margin-top: 0.5rem;"><i class="fas fa-fire"></i> #DriveToSurvive</p>
-    </footer>
-  </div>
-
-  <script>
-    // ----------------------------------------------
-    // Realistic Formula 1 sample data (inspired by 2024/2025 season)
-    // Images: reliable unsplash / wikimedia style placeholders with actual race/drivers/team vibe
-    // ----------------------------------------------
-
-    // NEWS data
-    const newsData = [
-      {
-        title: "Kimi Antonelli wins the 2026 Japanese Grand Prix ",
-        desc: "19 year old Mercedes driver keeps dominating after the Chinese Grandprix He finsihed in 1:28:3.403 making his pts 25.",
-        img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmx_Rg1yHDKhNn3xERtw6zlLv3pppApII2dg&s",
-        link: "#"
-      },
-      {
-        title: "Ferrari unveil aggressive upgrades for Imola",
-        desc: "New sidepod concept aims to close gap to Red Bull in constructor battle.",
-        img: "https://images.unsplash.com/photo-1628792332882-5b8a12c58e67?q=80&w=2069&auto=format",
-        link: "#"
-      },
-      {
-        title: "Hamilton: 'This team feels like family'",
-        desc: "Seven-time champion opens up about final season with Mercedes before switching to Ferrari.",
-        img: "https://images.unsplash.com/photo-1632737460833-a4b33e98c5df?q=80&w=2070&auto=format",
-        link: "#"
-      },
-      {
-        title: "Aston Martin upgrades deliver podium threat",
-        desc: "Alonso secures P2 in Saudi Arabia, team targets regular top-three finishes.",
-        img: "https://images.unsplash.com/photo-1559767924-42c2d7f7d4b7?q=80&w=2070&auto=format",
-        link: "#"
-      }
-    ];
-
-    // Teams data (card design)
-    const teamsData = [
-      { name: "Oracle Red Bull Racing", base: "Milton Keynes, UK", engine: "Ford DM01", img: "https://c.ndtvimg.com/2026-01/r3jjrej_red-bull-racing-2026_625x300_16_January_26.jpg?im=FeatureCrop,algorithm=dnn,width=1200,height=738" },
-      { name: "Scuderia Ferrari", base: "Maranello, Italy", engine: "Ferrari 067/6", img: "https://upload.wikimedia.org/wikipedia/commons/7/78/2026_Chinese_GP_-_Ferrari_-_Lewis_Hamilton_-_Qualifying.jpg" },
-      { name: "Mercedes-AMG PETRONAS", base: "Brackley, UK", engine: "Mercedes-AMG", img: "https://images.ctfassets.net/1fvlg6xqnm65/5mPoJIJroXGsBxhRL0tYrQ/5bcb87e98a87414fe2fc900bc68382ba/Mercedes-AMG_F1_W17_E_PERFORMANCE_-_GR_6.jpg?w=1273&q=75&fm=webp" },
-      { name: "McLaren Formula 1", base: "Woking, UK", engine: "Mercedes-AMG", img: "https://cdn.rmsothebys.com/c/e/b/0/9/2/ceb092fdabede0cf7f2a3c89dbcb9577b0923f2f.webp" }
-    ];
-
-    // Drivers data (cards)
-    const driversData = [
-      { name: "Max Verstappen", team: "Red Bull Racing", country: "Netherlands", img: "https://images.unsplash.com/photo-1589923188651-7c0ac3f0be61?q=80&w=2070&auto=format" },
-      { name: "Lewis Hamilton", team: "Mercedes", country: "United Kingdom", img: "https://images.unsplash.com/photo-1599037632459-b1c631c0f16d?q=80&w=2070&auto=format" },
-      { name: "Charles Leclerc", team: "Ferrari", country: "Monaco", img: "https://images.unsplash.com/photo-1552225399-6873b93a1d92?q=80&w=2070&auto=format" },
-      { name: "Lando Norris", team: "McLaren", country: "United Kingdom", img: "https://images.unsplash.com/photo-1541447271487-09612b3f49f7?q=80&w=2070&auto=format" },
-      { name: "Fernando Alonso", team: "Aston Martin", country: "Spain", img: "https://images.unsplash.com/photo-1577672414851-fa8e85a8e1a6?q=80&w=2070&auto=format" },
-      { name: "Sergio Perez", team: "Red Bull Racing", country: "Mexico", img: "https://images.unsplash.com/photo-1577672415090-47ba5e5f6a6f?q=80&w=2070&auto=format" }
-    ];
-
-    // Driver standings (realistic points)
-    const driverStandings = [
-      { pos: 1, driver: "Max Verstappen", nationality: "NED", team: "Red Bull Racing", points: 187 },
-      { pos: 2, driver: "Sergio Perez", nationality: "MEX", team: "Red Bull Racing", points: 143 },
-      { pos: 3, driver: "Charles Leclerc", nationality: "MON", team: "Ferrari", points: 129 },
-      { pos: 4, driver: "Lando Norris", nationality: "GBR", team: "McLaren", points: 110 },
-      { pos: 5, driver: "Carlos Sainz", nationality: "ESP", team: "Ferrari", points: 98 },
-      { pos: 6, driver: "Lewis Hamilton", nationality: "GBR", team: "Mercedes", points: 85 },
-      { pos: 7, driver: "Fernando Alonso", nationality: "ESP", team: "Aston Martin", points: 66 },
-      { pos: 8, driver: "George Russell", nationality: "GBR", team: "Mercedes", points: 54 }
-    ];
-
-    // Constructor standings
-    const constructorStandings = [
-      { pos: 1, team: "Red Bull Racing", points: 330, wins: 7 },
-      { pos: 2, team: "Ferrari", points: 227, wins: 2 },
-      { pos: 3, team: "McLaren Mercedes", points: 188, wins: 1 },
-      { pos: 4, team: "Mercedes", points: 139, wins: 0 },
-      { pos: 5, team: "Aston Martin", points: 82, wins: 0 },
-      { pos: 6, team: "RB Honda", points: 28, wins: 0 }
-    ];
-
-    // Helper: render cards into grid
-    function renderCards(containerId, items, type) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      container.innerHTML = '';
-      items.forEach(item => {
-        let imgUrl = '', title = '', subtitle = '', extra = '';
-        if (type === 'news') {
-          imgUrl = item.img;
-          title = item.title;
-          subtitle = item.desc;
-          extra = `<a href="${item.link}" class="btn-ghost">Read more <i class="fas fa-arrow-right"></i></a>`;
-        } else if (type === 'team') {
-          imgUrl = item.img;
-          title = item.name;
-          subtitle = `${item.base} · ${item.engine}`;
-          extra = '';
-        } else if (type === 'driver') {
-          imgUrl = item.img;
-          title = item.name;
-          subtitle = `${item.team} · ${item.country}`;
-          extra = '';
-        }
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <img class="card-img" src="${imgUrl}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x200?text=F1+Image'">
-          <div class="card-content">
-            <h3>${title}</h3>
-            <p>${subtitle}</p>
-            ${extra ? extra : ''}
-          </div>
-        `;
-        container.appendChild(card);
-      });
+  function moveLeft() {
+    if (position > 0) {
+      position -= 20;
+      car.style.left = position + "px";
     }
+  }
 
-    // render tables
-    function renderDriverStandings() {
-      const tbody = document.querySelector('#driverStandingsTable tbody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      driverStandings.forEach(d => {
-        const row = `<tr>
-          <td class="position">${d.pos}</td>
-          <td><strong>${d.driver}</strong></td>
-          <td>${d.nationality}</td>
-          <td>${d.team}</td>
-          <td style="font-weight:700;">${d.points}</td>
-        </tr>`;
-        tbody.insertAdjacentHTML('beforeend', row);
-      });
+  function moveRight() {
+    if (position < 260) {
+      position += 20;
+      car.style.left = position + "px";
     }
+  }
+</script>
 
-    function renderConstructorStandings() {
-      const tbody = document.querySelector('#constructorStandingsTable tbody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      constructorStandings.forEach(c => {
-        const row = `<tr>
-          <td class="position">${c.pos}</td>
-          <td><strong>${c.team}</strong></td>
-          <td>${c.points}</td>
-          <td>${c.wins}</td>
-        </tr>`;
-        tbody.insertAdjacentHTML('beforeend', row);
-      });
-    }
-
-    // Populate all sections with realistic images
-    function initWebsite() {
-      renderCards('newsGrid', newsData, 'news');
-      renderCards('teamsGrid', teamsData, 'team');
-      renderCards('driversGrid', driversData, 'driver');
-      renderDriverStandings();
-      renderConstructorStandings();
-    }
-
-    // For extra image realism, provide fallback for broken images (rare)
-    document.addEventListener('DOMContentLoaded', () => {
-      initWebsite();
-
-      // Optional: fix any missing image styles (ensure all images are not stretched)
-      const style = document.createElement('style');
-      style.textContent = `
-        .card-img, .hero-img {
-          object-fit: cover;
-          width: 100%;
-          height: auto;
-        }
-        .card-img {
-          aspect-ratio: 16 / 9;
-        }
-        .hero-img {
-          aspect-ratio: 21 / 9;
-        }
-        @media (max-width: 768px) {
-          .hero-img {
-            aspect-ratio: 16 / 9;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    });
-  </script>
 </body>
 </html>
