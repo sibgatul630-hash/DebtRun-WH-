@@ -3,669 +3,643 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>F1 SIMULATOR — REALISTIC GRAND PRIX</title>
+    <title>F1 REALISTIC 3D | Grand Prix Simulator</title>
     <style>
-        * {
-            user-select: none;
-            touch-action: manipulation;
-            box-sizing: border-box;
-        }
-
         body {
-            background: radial-gradient(circle at 20% 30%, #0a0c15 0%, #020408 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Orbitron', 'Rajdhani', 'Courier New', monospace;
             margin: 0;
-            padding: 16px;
+            overflow: hidden;
+            font-family: 'Orbitron', 'Segoe UI', 'Rajdhani', monospace;
+            touch-action: none;
         }
-
-        .game-wrapper {
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(3px);
-            border-radius: 48px;
-            padding: 18px 20px 24px;
-            box-shadow: 0 30px 45px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.1);
-            border: 1px solid rgba(225,6,0,0.4);
-        }
-
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 0 0 2px rgba(255,100,0,0.2);
-            background: #0a101c;
-            width: 100%;
-            height: auto;
-            cursor: none;
-        }
-
-        /* telemetry / realistic data panel */
-        .dashboard {
+        /* HUD overlay - 3D game with on-screen buttons */
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 18px 8px 20px 8px;
-            font-family: 'Orbitron', monospace;
-            font-weight: bold;
-            background: #03060cee;
-            padding: 12px 18px;
-            border-radius: 32px;
-            backdrop-filter: blur(8px);
-            border-left: 6px solid #e10600;
-            border-right: 1px solid #ffaa33;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 5px black;
         }
-
-        .data-card {
-            background: #00000077;
-            padding: 6px 16px;
-            border-radius: 40px;
+        .telemetry-panel {
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 8px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-left: 4px solid #e10600;
+            font-family: monospace;
+            pointer-events: none;
+        }
+        .telemetry-item {
             text-align: center;
+            color: #ffdd99;
+        }
+        .telemetry-label {
+            font-size: 10px;
             letter-spacing: 1px;
         }
-
-        .data-label {
-            font-size: 0.7rem;
-            color: #ffaa77;
-            text-transform: uppercase;
+        .telemetry-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffaa44;
         }
-
-        .data-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #ffdd99;
-            text-shadow: 0 0 5px #ff5500;
-            line-height: 1;
-        }
-
-        .g-force {
-            background: #1a1010aa;
-            border-left: 2px solid cyan;
-        }
-
-        .controls-row {
+        .button-panel {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
             gap: 18px;
-            margin-top: 18px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            padding: 12px 24px;
+            border-radius: 60px;
+            pointer-events: auto;
         }
-
-        .btn {
-            background: radial-gradient(ellipse at 30% 35%, #2d2f3a, #12141f);
+        button {
+            background: radial-gradient(circle at 30% 20%, #2a2e3c, #12141f);
             border: none;
             font-family: 'Orbitron', monospace;
             font-weight: bold;
-            font-size: 1.5rem;
-            padding: 12px 32px;
-            min-width: 120px;
+            font-size: 1.3rem;
+            padding: 10px 28px;
+            min-width: 100px;
             border-radius: 60px;
             color: #ffdca8;
-            text-shadow: 0 1px 2px black;
-            box-shadow: 0 7px 0 #03060c;
+            box-shadow: 0 5px 0 #03060c;
             cursor: pointer;
             transition: 0.05s linear;
             touch-action: manipulation;
-            letter-spacing: 2px;
-            backdrop-filter: blur(4px);
-        }
-
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 3px 0 #03060c;
-        }
-
-        .restart-btn {
-            background: radial-gradient(ellipse at 30% 35%, #3f2525, #2a1010);
-            color: #ffaa88;
-            box-shadow: 0 7px 0 #4a1515;
-        }
-
-        .status-panel {
-            text-align: center;
-            margin-top: 16px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            background: #000000aa;
-            display: inline-block;
-            width: auto;
-            padding: 6px 24px;
-            border-radius: 60px;
-            backdrop-filter: blur(5px);
-            font-family: monospace;
             letter-spacing: 1px;
         }
-
-        @media (max-width: 680px) {
-            .btn { padding: 8px 18px; font-size: 1.2rem; min-width: 85px; }
-            .data-value { font-size: 1.2rem; }
-            .dashboard { gap: 8px; padding: 8px 12px; }
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #03060c;
         }
-
-        footer {
-            text-align: center;
-            font-size: 9px;
-            color: #5f6a7a;
+        .restart-btn {
+            background: radial-gradient(circle at 30% 20%, #5a2a2a, #2f1010);
+            color: #ffaa99;
+        }
+        .boost-btn {
+            background: radial-gradient(circle at 30% 20%, #1e4a2e, #0a2a18);
+            color: #aaffcc;
+        }
+        .status-text {
+            background: rgba(0,0,0,0.7);
+            padding: 5px 18px;
+            border-radius: 40px;
             margin-top: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        @media (max-width: 700px) {
+            button { padding: 6px 16px; font-size: 1rem; min-width: 70px; }
+            .telemetry-value { font-size: 16px; }
+            .telemetry-panel { gap: 12px; padding: 5px 12px; }
+        }
+        #instructions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #ccc;
+            pointer-events: none;
+            font-family: monospace;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-<div>
-    <div class="game-wrapper">
-        <canvas id="gameCanvas" width="900" height="550" style="width:100%; height:auto; max-width:950px; aspect-ratio:900/550"></canvas>
-
-        <div class="dashboard">
-            <div class="data-card"><div class="data-label">SPEED</div><div class="data-value" id="speedDisplay">0</div><div style="font-size:10px;">km/h</div></div>
-            <div class="data-card"><div class="data-label">RPM</div><div class="data-value" id="rpmDisplay">0</div><div style="font-size:10px;">x1000</div></div>
-            <div class="data-card"><div class="data-label">GEAR</div><div class="data-value" id="gearDisplay">R</div></div>
-            <div class="data-card g-force"><div class="data-label">G-FORCE</div><div class="data-value" id="gforceDisplay">0.0</div><div style="font-size:10px;"> lateral</div></div>
-            <div class="data-card"><div class="data-label">SCORE</div><div class="data-value" id="scoreValue">0</div></div>
-            <div class="data-card"><div class="data-label">LAP</div><div class="data-value" id="lapValue">0</div><div style="font-size:10px;">/ 3</div></div>
+    <div id="hud">
+        <div class="telemetry-panel">
+            <div class="telemetry-item"><div class="telemetry-label">SPEED</div><div class="telemetry-value" id="speedDisplay">0</div><div style="font-size:9px;">km/h</div></div>
+            <div class="telemetry-item"><div class="telemetry-label">RPM</div><div class="telemetry-value" id="rpmDisplay">0</div><div style="font-size:9px;">x1000</div></div>
+            <div class="telemetry-item"><div class="telemetry-label">GEAR</div><div class="telemetry-value" id="gearDisplay">1</div></div>
+            <div class="telemetry-item"><div class="telemetry-label">LAP</div><div class="telemetry-value" id="lapDisplay">0/3</div></div>
+            <div class="telemetry-item"><div class="telemetry-label">SCORE</div><div class="telemetry-value" id="scoreDisplay">0</div></div>
         </div>
-
-        <div class="controls-row">
-            <button class="btn" id="leftBtn">◀ LEFT</button>
-            <button class="btn" id="rightBtn">RIGHT ▶</button>
-            <button class="btn restart-btn" id="restartBtn">⭯ RESTART</button>
+        <div class="button-panel">
+            <button id="leftBtn">◀ LEFT</button>
+            <button id="rightBtn">RIGHT ▶</button>
+            <button id="boostBtn" class="boost-btn">⚡ BOOST</button>
+            <button id="restartBtn" class="restart-btn">⟳ RESTART</button>
         </div>
-        <div style="display: flex; justify-content: center; margin-top: 12px;">
-            <div class="status-panel" id="raceStatus">🏎️ REALISTIC F1 | DRS READY | OVERTAKE FOR POINTS 🏁</div>
-        </div>
-        <footer>SIMULATION • tyre grip • aero g-force • gearbox & RPM • 3 laps to win</footer>
+        <div class="status-text" id="raceStatus">🏎️ 3D GRAND PRIX | OVERTAKE & WIN 🏁</div>
     </div>
-</div>
+    <div id="instructions">🎮 LEFT/RIGHT | BOOST (limited)</div>
 
-<script>
-    (function(){
-        // ---------- REALISTIC F1 SIMULATION ----------
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    <!-- Import Three.js core and add-ons -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- setup scene, camera, renderers ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
         
-        // Dimensions (logical 900x550)
-        const LANE_COUNT = 3;
-        const LANE_WIDTH = 900 / 3; // 300px
-        const CAR_WIDTH = 52;
-        const CAR_HEIGHT = 78;
+        // Camera: behind the car (chase view)
+        const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2.8, -7);
+        camera.lookAt(0, 0.5, 5);
         
-        // Player physics & control
-        let playerLane = 1;      // 0=left,1=center,2=right
-        let playerX = 0;
-        const FIXED_PLAYER_Y = 440;
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
         
-        // Car dynamics
-        let speedKmh = 85;          // start from pit limiter style
-        let targetSpeed = 85;
-        let rpm = 3800;
-        let gear = 1;
-        let maxSpeedPerGear = [0, 145, 210, 275, 335, 380];  // kmh per gear (1-5)
-        let revLimiter = 12800;
+        // CSS2DRenderer for floating labels
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
         
-        // Track / Race state
-        let score = 0;
-        let currentLap = 0;
-        let distanceTraveled = 0;
-        const DIST_PER_LAP = 2100;    // scroll units per lap
+        // --- Lighting ---
+        // Ambient
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        // Main directional light (sun)
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+        sunLight.position.set(5, 10, 3);
+        sunLight.castShadow = true;
+        sunLight.receiveShadow = true;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        scene.add(sunLight);
+        // Fill light from below
+        const fillLight = new THREE.PointLight(0x4466cc, 0.4);
+        fillLight.position.set(0, -1, 2);
+        scene.add(fillLight);
+        // Back rim light
+        const rimLight = new THREE.PointLight(0xffaa66, 0.5);
+        rimLight.position.set(-2, 2, -4);
+        scene.add(rimLight);
+        
+        // --- Track: a long curved road with markers ---
+        const trackLength = 200;
+        const trackWidth = 6;
+        const roadMat = new THREE.MeshStandardMaterial({ color: 0x1a1f2a, roughness: 0.7, metalness: 0.1 });
+        const road = new THREE.Mesh(new THREE.PlaneGeometry(trackWidth, trackLength), roadMat);
+        road.rotation.x = -Math.PI / 2;
+        road.position.y = -0.05;
+        road.receiveShadow = true;
+        scene.add(road);
+        
+        // Lane markings
+        const lineMat = new THREE.MeshStandardMaterial({ color: 0xffcc55, emissive: 0x442200 });
+        for (let i = -1.5; i <= 1.5; i+=1.5) {
+            const lineStrip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, trackLength), lineMat);
+            lineStrip.position.set(i, 0, 0);
+            lineStrip.receiveShadow = true;
+            scene.add(lineStrip);
+        }
+        
+        // Dashed center line (animated later)
+        const dashMat = new THREE.MeshStandardMaterial({ color: 0xffaa66 });
+        const dashes = [];
+        for (let z = -trackLength/2 + 1; z < trackLength/2; z += 1.8) {
+            const dash = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.8), dashMat);
+            dash.position.set(0, 0.02, z);
+            dash.castShadow = true;
+            scene.add(dash);
+            dashes.push(dash);
+        }
+        
+        // Roadside kerbs & grass
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x2c5a2a });
+        const leftGrass = new THREE.Mesh(new THREE.PlaneGeometry(4, trackLength), grassMat);
+        leftGrass.rotation.x = -Math.PI/2;
+        leftGrass.position.set(-4.2, -0.08, 0);
+        scene.add(leftGrass);
+        const rightGrass = new THREE.Mesh(new THREE.PlaneGeometry(4, trackLength), grassMat);
+        rightGrass.rotation.x = -Math.PI/2;
+        rightGrass.position.set(4.2, -0.08, 0);
+        scene.add(rightGrass);
+        
+        // Trees along track (simple)
+        const treeMat = new THREE.MeshStandardMaterial({ color: 0x5c9e3a });
+        for (let z = -90; z <= 90; z+=12) {
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.2, 4), treeMat);
+            trunk.position.set(-5.2, 0, z);
+            trunk.castShadow = true;
+            scene.add(trunk);
+            const trunk2 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.2, 4), treeMat);
+            trunk2.position.set(5.2, 0, z);
+            trunk2.castShadow = true;
+            scene.add(trunk2);
+        }
+        
+        // --- F1 Car Model (custom group) ---
+        const carGroup = new THREE.Group();
+        // Body
+        const bodyGeo = new THREE.BoxGeometry(0.9, 0.35, 1.8);
+        const bodyMatRed = new THREE.MeshStandardMaterial({ color: 0xE10600, roughness: 0.2, metalness: 0.85 });
+        const body = new THREE.Mesh(bodyGeo, bodyMatRed);
+        body.castShadow = true;
+        body.receiveShadow = true;
+        body.position.y = 0.1;
+        carGroup.add(body);
+        // Cockpit
+        const cockpitGeo = new THREE.BoxGeometry(0.7, 0.2, 0.9);
+        const cockpitMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9 });
+        const cockpit = new THREE.Mesh(cockpitGeo, cockpitMat);
+        cockpit.position.set(0, 0.28, -0.2);
+        cockpit.castShadow = true;
+        carGroup.add(cockpit);
+        // Halo
+        const haloMat = new THREE.MeshStandardMaterial({ color: 0xccccdd, metalness: 0.95 });
+        const haloBar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.9), haloMat);
+        haloBar.position.set(0, 0.48, -0.1);
+        carGroup.add(haloBar);
+        // Wheels
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+        const positions = [[-0.65, 0.05, 0.7], [0.65, 0.05, 0.7], [-0.65, 0.05, -0.7], [0.65, 0.05, -0.7]];
+        positions.forEach(pos => {
+            const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.5, 24);
+            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+            wheel.rotation.z = Math.PI/2;
+            wheel.position.set(pos[0], pos[1], pos[2]);
+            wheel.castShadow = true;
+            carGroup.add(wheel);
+        });
+        // Rear wing
+        const wingMat = new THREE.MeshStandardMaterial({ color: 0xccaa77 });
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.12, 0.25), wingMat);
+        wing.position.set(0, 0.32, -0.95);
+        carGroup.add(wing);
+        scene.add(carGroup);
+        
+        // --- Opponent cars (AI) ---
+        const opponents = [];
+        function createOpponentCar(x, z, colorHex) {
+            const group = new THREE.Group();
+            const col = colorHex || 0x3a6ea5;
+            const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.4 });
+            const bodyO = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.33, 1.7), mat);
+            bodyO.castShadow = true;
+            group.add(bodyO);
+            const wheelMatO = new THREE.MeshStandardMaterial({ color: 0x222222 });
+            const offs = [[-0.6, 0.05, 0.65], [0.6, 0.05, 0.65], [-0.6, 0.05, -0.65], [0.6, 0.05, -0.65]];
+            offs.forEach(pos => {
+                const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.45, 16), wheelMatO);
+                wheel.rotation.z = Math.PI/2;
+                wheel.position.set(pos[0], pos[1], pos[2]);
+                group.add(wheel);
+            });
+            group.position.set(x, 0.1, z);
+            scene.add(group);
+            return group;
+        }
+        
+        // Spawn 5 opponents ahead
+        for (let i = 0; i < 6; i++) {
+            const laneX = (Math.random() - 0.5) * 3.2;
+            const zPos = -15 - i * 8;
+            const carObj = createOpponentCar(laneX, zPos, 0x4a7db4);
+            opponents.push({ obj: carObj, z: zPos, x: laneX, speed: 1.8 + Math.random() * 1.2, passed: false });
+        }
+        
+        // --- Floating labels for opponents (CSS2D) ---
+        const labelDiv = (text, color) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.fontSize = '14px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '1px 1px black';
+            div.style.background = 'rgba(0,0,0,0.6)';
+            div.style.padding = '2px 8px';
+            div.style.borderRadius = '20px';
+            div.style.borderLeft = `3px solid ${color}`;
+            div.style.fontFamily = 'monospace';
+            return new CSS2DObject(div);
+        };
+        
+        const oppLabels = [];
+        opponents.forEach((opp, idx) => {
+            const lbl = labelDiv(`RIVAL ${idx+1}`, '#ffaa77');
+            lbl.position.copy(opp.obj.position);
+            lbl.position.y += 0.9;
+            scene.add(lbl);
+            oppLabels.push(lbl);
+        });
+        
+        // --- Game State ---
         let gameActive = true;
         let gameWin = false;
+        let speed = 110;    // km/h
+        let targetSpeed = 110;
+        let score = 0;
+        let currentLap = 0;
+        let lapDistance = 0;
+        const lapLength = 65;  // meters (track length units)
+        let gear = 2;
+        let rpm = 5500;
+        let boostAmount = 100;  // boost energy %
+        let boosting = false;
         
-        // Opponents
-        let opponents = [];
+        // Car lateral movement
+        let targetLaneX = 0;
+        let currentLaneX = 0;
+        const laneStep = 1.5;
+        const maxLane = 2.2;
         
-        // Scroll & road
-        let scrollY = 0;
-        let trackCurve = 0;       // subtle lateral micro vibration (realism)
+        // UI elements
+        const speedElem = document.getElementById('speedDisplay');
+        const rpmElem = document.getElementById('rpmDisplay');
+        const gearElem = document.getElementById('gearDisplay');
+        const lapElem = document.getElementById('lapDisplay');
+        const scoreElem = document.getElementById('scoreDisplay');
+        const statusElem = document.getElementById('raceStatus');
         
-        // spawn system
-        let spawnCooldown = 0;
-        let baseSpawnDelay = 48;
-        
-        // G-force effect for UI
-        let lateralG = 0.0;
-        
-        // ---------- HELPER FUNCTIONS ----------
-        function updatePlayerPosition(){
-            let laneCenterX = (playerLane * LANE_WIDTH) + (LANE_WIDTH/2);
-            playerX = laneCenterX - CAR_WIDTH/2;
-            playerX = Math.min(Math.max(playerX, 8), canvas.width - CAR_WIDTH - 8);
+        // Helper updates
+        function updateUI() {
+            speedElem.innerText = Math.floor(speed);
+            let rpmK = Math.floor(rpm / 1000);
+            rpmElem.innerText = rpmK;
+            gearElem.innerText = gear;
+            lapElem.innerText = `${currentLap}/3`;
+            scoreElem.innerText = Math.floor(score);
         }
         
-        // Spawn realistic opponent (different colors, random performance)
-        function spawnOpponent(){
-            if(!gameActive) return;
-            const lane = Math.floor(Math.random() * LANE_COUNT);
-            const laneCenterX = (lane * LANE_WIDTH) + (LANE_WIDTH/2);
-            let xPos = laneCenterX - CAR_WIDTH/2;
-            xPos = Math.min(Math.max(xPos, 6), canvas.width - CAR_WIDTH - 6);
-            const carColor = `hsl(${Math.floor(Math.random() * 40) + 200}, 65%, 52%)`; // blue/purple/cyan rivals
-            opponents.push({
-                x: xPos,
-                y: -CAR_HEIGHT - Math.random() * 100,
-                lane: lane,
-                width: CAR_WIDTH,
-                height: CAR_HEIGHT,
-                color: carColor,
-                counted: false,
-                // AI speed factor (makes race less predictable)
-                aiOffset: 0.9 + Math.random() * 0.35
-            });
-        }
-        
-        // Realistic gear & RPM simulation
-        function updateDrivetrain() {
-            if(!gameActive) return;
-            // target speed based on score (overtakes increase target speed, realistic reward)
-            let performanceFactor = 1 + (score / 550);
-            performanceFactor = Math.min(performanceFactor, 1.45);
-            let rawTarget = 110 + (score / 6.5);
-            rawTarget = Math.min(rawTarget, 348);
-            targetSpeed = rawTarget * (performanceFactor * 0.98 + 0.2);
-            if(!gameActive) targetSpeed = speedKmh;
-            // smooth acceleration with inertia (realistic)
-            let accel = (targetSpeed - speedKmh) * 0.055;
-            if(Math.abs(accel) > 8) accel = Math.sign(accel)*8;
-            speedKmh += accel;
-            speedKmh = Math.max(28, Math.min(speedKmh, 365));
-            
-            // Automatic gearbox logic based on speed
-            let newGear = gear;
-            if(speedKmh < 50 && gear > 1) newGear = 1;
-            else if(speedKmh > maxSpeedPerGear[gear] && gear < 5) newGear = gear+1;
-            else if(speedKmh < maxSpeedPerGear[gear-1] - 18 && gear > 1) newGear = gear-1;
-            if(newGear !== gear){
-                gear = newGear;
-                // slight rpm drop on shift
-                rpm = Math.min(revLimiter, rpm * 0.82 + 2000);
-            }
-            // RPM calculation
-            let gearRatio = gear / 3.8;
-            let maxRPMgear = revLimiter;
-            let rawRpm = (speedKmh / maxSpeedPerGear[gear]) * maxRPMgear;
-            if(gear === 1) rawRpm = Math.min(revLimiter, rawRpm * 1.2);
-            rpm = Math.floor(rawRpm * 0.92 + rpm * 0.08);
-            rpm = Math.min(revLimiter, Math.max(2200, rpm));
-            if(speedKmh < 18) rpm = 2800 + Math.random() * 400;
-        }
-        
-        // update scrolling and lap detection
-        let scrollSpeed = 0;
-        function updateTrackScroll(){
-            if(!gameActive) return;
-            // scroll speed based on real speed (km/h)
-            let rawScroll = (speedKmh / 210) * 5.4;
-            rawScroll = Math.min(rawScroll, 8.2);
-            scrollSpeed = rawScroll;
-            let deltaScroll = scrollSpeed;
-            distanceTraveled += deltaScroll;
-            if(distanceTraveled >= DIST_PER_LAP){
-                distanceTraveled -= DIST_PER_LAP;
-                if(gameActive && !gameWin){
-                    currentLap++;
-                    document.getElementById('lapValue').innerText = currentLap;
-                    // bonus for completing lap: extra points + pit boost effect
-                    if(currentLap <= 3){
-                        score += 180;
-                        targetSpeed += 12;
-                        document.getElementById('scoreValue').innerText = Math.floor(score);
-                    }
-                    if(currentLap >= 3){
-                        gameActive = false;
-                        gameWin = true;
-                        document.getElementById('raceStatus').innerHTML = "🏆 WORLD CHAMPION! PERFECT DRIVING 🏆 PRESS RESTART";
-                        return;
-                    }
-                }
-            }
-            // realistic track curve oscillation (subtle)
-            trackCurve = Math.sin(Date.now() * 0.0035) * 3.5;
-        }
-        
-        // Opponent movement + overtake & collision (realistic)
-        function updateOpponents(){
-            for(let i=0; i<opponents.length; i++){
-                const opp = opponents[i];
-                let oppScroll = scrollSpeed * (opp.aiOffset || 1.0);
-                opp.y += oppScroll;
-                
-                // overtake detection: car passes player's rear without collision
-                if(!opp.counted && opp.y + CAR_HEIGHT > FIXED_PLAYER_Y + CAR_HEIGHT + 8){
-                    opp.counted = true;
-                    if(gameActive){
-                        let points = 42 + Math.floor(Math.random() * 20);
-                        score += points;
-                        document.getElementById('scoreValue').innerText = Math.floor(score);
-                        // boost effect on overtake
-                        targetSpeed += 3.2;
-                        if(targetSpeed > 358) targetSpeed = 358;
-                        // add haptic-like feel
-                        lateralG = Math.min(1.2, lateralG + 0.3);
-                    }
-                }
-            }
-            
-            // Collision check (precise box)
-            const playerRect = {
-                x: playerX,
-                y: FIXED_PLAYER_Y,
-                w: CAR_WIDTH,
-                h: CAR_HEIGHT
-            };
-            for(let i=0; i<opponents.length; i++){
-                const opp = opponents[i];
-                const oppRect = { x: opp.x, y: opp.y, w: CAR_WIDTH, h: CAR_HEIGHT };
-                if(playerRect.x < oppRect.x + oppRect.w &&
-                    playerRect.x + playerRect.w > oppRect.x &&
-                    playerRect.y < oppRect.y + oppRect.h &&
-                    playerRect.y + playerRect.h > oppRect.y){
-                    gameActive = false;
-                    gameWin = false;
-                    document.getElementById('raceStatus').innerHTML = "💥 HEAVY CRASH! SUSPENSION FAILURE 💥 PRESS RESTART";
-                    return;
-                }
-            }
-            // remove offscreen
-            opponents = opponents.filter(opp => opp.y < canvas.height + 250);
-        }
-        
-        // spawn management with intensity based on speed
-        function updateSpawner(){
-            if(!gameActive) return;
-            let dynamicDelay = Math.max(28, 52 - Math.floor(speedKmh / 18));
-            if(spawnCooldown <= 0){
-                spawnOpponent();
-                // sometimes double rival pack at high speed
-                if(speedKmh > 210 && Math.random() < 0.22){
-                    spawnOpponent();
-                }
-                spawnCooldown = dynamicDelay;
+        // Realistic physics update
+        function updatePhysics(deltaTime) {
+            if (!gameActive) return;
+            // boost logic
+            let boostFactor = 1.0;
+            if (boosting && boostAmount > 5 && gameActive) {
+                boostFactor = 1.45;
+                boostAmount -= deltaTime * 18;
+                if (boostAmount < 0) boostAmount = 0;
             } else {
-                spawnCooldown--;
+                boosting = false;
+                // regenerate boost slowly
+                boostAmount += deltaTime * 6;
+                if (boostAmount > 100) boostAmount = 100;
             }
-        }
-        
-        // Real-time UI updates (RPM, Gear, G-force, speed)
-        function updateUI(){
-            document.getElementById('speedDisplay').innerText = Math.floor(speedKmh);
-            let rpmVal = Math.floor(rpm / 1000);
-            document.getElementById('rpmDisplay').innerText = rpmVal;
-            let gearChar = gear === 1 ? "1" : gear === 2 ? "2" : gear === 3 ? "3" : gear === 4 ? "4" : gear === 5 ? "5" : "R";
-            if(speedKmh < 5 && !gameActive) gearChar = "N";
-            document.getElementById('gearDisplay').innerText = gearChar;
-            // dynamic G-force based on lane change + speed factor
-            let newLateral = Math.abs((playerLane - 1) * 0.65) * (speedKmh / 190);
-            newLateral = Math.min(2.1, newLateral);
-            lateralG = lateralG * 0.88 + newLateral * 0.12;
-            document.getElementById('gforceDisplay').innerText = lateralG.toFixed(2);
-        }
-        
-        // ---------- GRAPHICS : REALISTIC TRACK, SHADOWS, BRAKE GLOW ----------
-        function drawAsphaltAndDetails(){
-            // Base tarmac with grain
-            ctx.fillStyle = "#12161f";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // asphalt texture (speckle)
-            for(let i=0;i<380;i++){
-                ctx.fillStyle = `rgba(255,255,200,${Math.random()*0.1})`;
-                ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1.5, 1.5);
+            // target speed based on score and boost
+            let perf = 1 + (score / 800);
+            perf = Math.min(perf, 1.35);
+            let rawTarget = 130 + (score / 14);
+            rawTarget = Math.min(rawTarget, 340);
+            targetSpeed = rawTarget * perf * (boostFactor);
+            // acceleration inertia
+            let accel = (targetSpeed - speed) * 0.08;
+            speed += accel;
+            speed = Math.max(75, Math.min(speed, 370));
+            
+            // Gear simulation
+            let newGear = gear;
+            if (speed > 210 && gear < 5) newGear = 5;
+            else if (speed > 145 && gear < 4) newGear = 4;
+            else if (speed > 95 && gear < 3) newGear = 3;
+            else if (speed > 60 && gear < 2) newGear = 2;
+            else if (speed < 55 && gear > 2) newGear = 2;
+            if (newGear !== gear) {
+                gear = newGear;
+                rpm = 5200;
             }
-            // racing groove
-            ctx.globalAlpha = 0.5;
-            for(let i=0;i<3;i++){
-                ctx.beginPath();
-                ctx.lineWidth = 14;
-                ctx.strokeStyle = "#2a2f38";
-                let laneCenterX = i*LANE_WIDTH + LANE_WIDTH/2;
-                ctx.moveTo(laneCenterX-18, 0);
-                ctx.lineTo(laneCenterX-18+trackCurve*0.4, canvas.height);
-                ctx.stroke();
-            }
-            ctx.globalAlpha = 1;
-            // lane lines (dynamic)
-            for(let i=1; i<LANE_COUNT; i++){
-                let lineX = i * LANE_WIDTH;
-                ctx.beginPath();
-                ctx.setLineDash([18, 28]);
-                ctx.strokeStyle = "#f5c542";
-                ctx.lineWidth = 4;
-                ctx.moveTo(lineX + Math.sin(Date.now()*0.008)*0.8, 0);
-                ctx.lineTo(lineX + Math.sin(Date.now()*0.008)*0.8, canvas.height);
-                ctx.stroke();
-            }
-            ctx.setLineDash([]);
-            // kerb marks
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = "#e10600";
-            ctx.strokeRect(5, 5, canvas.width-10, canvas.height-10);
-            for(let i=0;i<16;i++){
-                let yOff = (scrollY*2 + i*55) % canvas.height;
-                ctx.fillStyle = "#f2b44c";
-                ctx.fillRect(12, yOff, 18, 32);
-                ctx.fillRect(canvas.width-30, yOff, 18, 32);
-            }
-            // start/finish line
-            let finishY = (scrollY*1.6) % canvas.height;
-            for(let k=0;k<12;k++){
-                let linePos = (finishY + k*38) % canvas.height;
-                ctx.fillStyle = "#fff6cf";
-                ctx.fillRect(canvas.width/2-70, linePos, 140, 12);
-                ctx.fillStyle = "#ff4d4d";
-                ctx.fillRect(canvas.width/2-70, linePos+12, 140, 12);
-            }
-        }
-        
-        function drawPlayerCarRealistic(){
-            ctx.save();
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = "#ff3300";
-            // F1 body
-            ctx.fillStyle = "#E31C1C";
-            ctx.beginPath();
-            ctx.roundRect(playerX, FIXED_PLAYER_Y, CAR_WIDTH, CAR_HEIGHT, 14);
-            ctx.fill();
-            // engine cover carbon
-            ctx.fillStyle = "#181818";
-            ctx.beginPath();
-            ctx.roundRect(playerX+8, FIXED_PLAYER_Y+12, CAR_WIDTH-16, 24, 8);
-            ctx.fill();
-            // Halo
-            ctx.strokeStyle = "#555";
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.moveTo(playerX+12, FIXED_PLAYER_Y+8);
-            ctx.quadraticCurveTo(playerX+CAR_WIDTH/2, FIXED_PLAYER_Y-6, playerX+CAR_WIDTH-12, FIXED_PLAYER_Y+8);
-            ctx.stroke();
-            // driver helmet
-            ctx.fillStyle = "#f4d03f";
-            ctx.beginPath();
-            ctx.arc(playerX+CAR_WIDTH/2, FIXED_PLAYER_Y+26, 12, 0, Math.PI*2);
-            ctx.fill();
-            // wheels with spin effect
-            ctx.fillStyle = "#111";
-            ctx.fillRect(playerX-8, FIXED_PLAYER_Y+12, 9, 26);
-            ctx.fillRect(playerX+CAR_WIDTH-1, FIXED_PLAYER_Y+12, 9, 26);
-            ctx.fillRect(playerX-8, FIXED_PLAYER_Y+CAR_HEIGHT-38, 9, 26);
-            ctx.fillRect(playerX+CAR_WIDTH-1, FIXED_PLAYER_Y+CAR_HEIGHT-38, 9, 26);
-            // number
-            ctx.font = "bold 14px 'Orbitron'";
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillText("16", playerX+20, FIXED_PLAYER_Y+CAR_HEIGHT-10);
-            // DRS indicator if speed>280
-            if(speedKmh > 280 && gameActive){
-                ctx.font = "bold 10px monospace";
-                ctx.fillStyle = "#0f0";
-                ctx.fillText("DRS", playerX+6, FIXED_PLAYER_Y+15);
-            }
-            ctx.restore();
-        }
-        
-        function drawOpponentsRealistic(){
-            for(let opp of opponents){
-                ctx.save();
-                ctx.shadowBlur = 6;
-                ctx.fillStyle = opp.color || "#2C5F8A";
-                ctx.beginPath();
-                ctx.roundRect(opp.x, opp.y, CAR_WIDTH, CAR_HEIGHT, 12);
-                ctx.fill();
-                ctx.fillStyle = "#1a2c3e";
-                ctx.beginPath();
-                ctx.roundRect(opp.x+10, opp.y+14, CAR_WIDTH-20, 20, 6);
-                ctx.fill();
-                ctx.fillStyle = "#ddd";
-                ctx.font = "bold 10px monospace";
-                ctx.fillText("RIVAL", opp.x+14, opp.y+32);
-                ctx.fillStyle = "#aaaaff";
-                ctx.fillRect(opp.x+6, opp.y+CAR_HEIGHT-18, 12, 12);
-                ctx.fillRect(opp.x+CAR_WIDTH-18, opp.y+CAR_HEIGHT-18, 12, 12);
-                ctx.restore();
-            }
-        }
-        
-        function drawRaceMessages(){
-            if(!gameActive && gameWin){
-                ctx.font = "800 38px 'Orbitron'";
-                ctx.fillStyle = "#FFD966";
-                ctx.shadowBlur = 4;
-                ctx.fillText("🏆 WINNER 🏆", canvas.width/2-130, 85);
-                ctx.font = "18px monospace";
-                ctx.fillStyle = "#ffffffcc";
-                ctx.fillText("F1 WORLD CHAMPION", canvas.width/2-105, 145);
-            } else if(!gameActive && !gameWin){
-                ctx.font = "800 34px 'Orbitron'";
-                ctx.fillStyle = "#ff5e5e";
-                ctx.fillText("CRASH OUT", canvas.width/2-100, 85);
-                ctx.font = "15px monospace";
-                ctx.fillStyle = "#ffaa88";
-                ctx.fillText("RESTART TO REJOIN", canvas.width/2-85, 140);
-            }
-            // dynamic tyre wear flash (just style)
-            if(speedKmh > 320 && gameActive){
-                ctx.fillStyle = "rgba(255,80,0,0.2)";
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-            }
-        }
-        
-        // roundRect helper
-        if (!CanvasRenderingContext2D.prototype.roundRect) {
-            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-                if (w < 2 * r) r = w / 2;
-                if (h < 2 * r) r = h / 2;
-                this.moveTo(x+r, y);
-                this.lineTo(x+w-r, y);
-                this.quadraticCurveTo(x+w, y, x+w, y+r);
-                this.lineTo(x+w, y+h-r);
-                this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-                this.lineTo(x+r, y+h);
-                this.quadraticCurveTo(x, y+h, x, y+h-r);
-                this.lineTo(x, y+r);
-                this.quadraticCurveTo(x, y, x+r, y);
-                return this;
-            };
-        }
-        
-        // ----- GAME LOOP (update & render) -----
-        function gameUpdate(){
-            if(gameActive){
-                updateDrivetrain();
-                updateTrackScroll();
-                updateOpponents();
-                updateSpawner();
-                scrollY += scrollSpeed;
+            rpm = Math.min(12500, rpm + (speed * 35 * deltaTime));
+            if (rpm > 11500) rpm = 10500;
+            
+            // Lap progression
+            let deltaZ = speed * deltaTime * 0.055;
+            lapDistance += deltaZ;
+            if (lapDistance >= lapLength) {
+                lapDistance -= lapLength;
+                currentLap++;
+                if (currentLap >= 3) {
+                    gameActive = false;
+                    gameWin = true;
+                    statusElem.innerText = "🏆 YOU ARE F1 WORLD CHAMPION! 🏆";
+                } else {
+                    score += 180;
+                    statusElem.innerText = `✔️ LAP ${currentLap} COMPLETE +180 PTS`;
+                    setTimeout(() => { if(gameActive) statusElem.innerText = "🏁 PUSH FOR MORE OVERTAKES 🏁"; }, 1800);
+                }
                 updateUI();
             }
+            // update camera slight shake based on speed
+            camera.position.x += (currentLaneX * 0.12 - camera.position.x) * 0.1;
+            camera.position.z = -6 + (speed / 280) * 0.8;
+            camera.lookAt(currentLaneX * 0.8, 0.2, lapDistance + 5);
         }
         
-        function render(){
-            drawAsphaltAndDetails();
-            drawOpponentsRealistic();
-            drawPlayerCarRealistic();
-            drawRaceMessages();
-            // track reflection / lap counter on canvas
-            ctx.font = "bold 18px Orbitron";
-            ctx.fillStyle = "#ffbf77";
-            ctx.shadowBlur = 0;
-            ctx.fillText("LAP "+currentLap+"/3", 18, 55);
-            if(!gameActive && !gameWin) ctx.fillStyle = "#ff8855";
-        }
-        
-        function mainLoop(){
-            gameUpdate();
-            render();
-            requestAnimationFrame(mainLoop);
-        }
-        
-        // ----- Controls (lane switching with realism & G-force punch)-----
-        function moveLeft(){
-            if(!gameActive) return;
-            if(playerLane > 0){
-                playerLane--;
-                updatePlayerPosition();
-                lateralG += 0.45;
-                if(lateralG > 2.1) lateralG = 2.1;
+        // Opponent movement and collision + overtake
+        function updateOpponents(deltaTime) {
+            const playerZ = lapDistance;
+            const playerX = currentLaneX;
+            for (let i = 0; i < opponents.length; i++) {
+                const opp = opponents[i];
+                let oppSpeed = 1.4 + (score / 900);
+                oppSpeed = Math.min(oppSpeed, 3.0);
+                opp.z += (speed * deltaTime * 0.045) * (0.85 + (opp.speed * 0.1));
+                // reposition if far ahead or behind
+                if (opp.z > playerZ + 12) {
+                    opp.z = playerZ - 18 - Math.random() * 8;
+                    opp.x = (Math.random() - 0.5) * 3.4;
+                    opp.passed = false;
+                    opp.obj.position.set(opp.x, 0.1, opp.z);
+                } else if (opp.z < playerZ - 20) {
+                    opp.z = playerZ + 10;
+                    opp.x = (Math.random() - 0.5) * 3.4;
+                    opp.passed = false;
+                    opp.obj.position.set(opp.x, 0.1, opp.z);
+                }
+                opp.obj.position.set(opp.x, 0.1, opp.z);
+                if (oppLabels[i]) {
+                    oppLabels[i].position.set(opp.x, 0.9, opp.z);
+                }
+                // Collision detection (distance)
+                const dx = playerX - opp.x;
+                const dz = playerZ - opp.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                if (dist < 1.0 && gameActive) {
+                    gameActive = false;
+                    gameWin = false;
+                    statusElem.innerText = "💥 CRASH! GAME OVER. PRESS RESTART 💥";
+                }
+                // Overtake: opponent behind and passed
+                if (!opp.passed && opp.z < playerZ - 0.8 && opp.z > playerZ - 3.5 && Math.abs(dx) < 1.2) {
+                    opp.passed = true;
+                    if (gameActive) {
+                        score += 45;
+                        updateUI();
+                        statusElem.innerText = "🏁 OVERTAKE! +45 PTS 🏁";
+                        setTimeout(() => { if(gameActive) statusElem.innerText = "🔥 KEEP RACING 🔥"; }, 1000);
+                    }
+                }
             }
         }
         
-        function moveRight(){
-            if(!gameActive) return;
-            if(playerLane < LANE_COUNT-1){
-                playerLane++;
-                updatePlayerPosition();
-                lateralG += 0.45;
-                if(lateralG > 2.1) lateralG = 2.1;
-            }
+        // Animate road dashes (movement)
+        let dashOffset = 0;
+        function animateRoadDetails(deltaTime) {
+            dashOffset += speed * deltaTime * 0.12;
+            dashes.forEach((dash, idx) => {
+                let newZ = (idx * 1.8 - trackLength/2 + dashOffset) % trackLength;
+                if (newZ > trackLength/2) newZ -= trackLength;
+                dash.position.z = newZ;
+            });
         }
         
-        function restartGame(){
+        // Car steering animation
+        function updateCarPosition(deltaTime) {
+            // smooth lane change
+            currentLaneX += (targetLaneX - currentLaneX) * 0.25;
+            currentLaneX = Math.min(maxLane, Math.max(-maxLane, currentLaneX));
+            carGroup.position.x = currentLaneX;
+            carGroup.position.z = lapDistance;
+            // slight tilt
+            carGroup.rotation.z = (currentLaneX * 0.12);
+            carGroup.rotation.x = Math.sin(Date.now() * 0.015) * 0.02;
+        }
+        
+        // Score / UI periodic update
+        let lastScoreUpdate = 0;
+        
+        // --- Controls ---
+        function moveLeft() {
+            if (!gameActive) return;
+            targetLaneX = Math.max(-maxLane, targetLaneX - laneStep);
+        }
+        function moveRight() {
+            if (!gameActive) return;
+            targetLaneX = Math.min(maxLane, targetLaneX + laneStep);
+        }
+        function useBoost() {
+            if (!gameActive) return;
+            if (boostAmount >= 15) {
+                boosting = true;
+                statusElem.innerText = "⚡ ERS BOOST ACTIVE! ⚡";
+                setTimeout(() => { if(gameActive && boosting) statusElem.innerText = "🏎️ PUSH LIMITS 🏎️"; }, 800);
+            } else {
+                statusElem.innerText = "⚠️ BOOST ENERGY LOW ⚠️";
+            }
+        }
+        function restartGame() {
             gameActive = true;
             gameWin = false;
+            speed = 120;
+            targetSpeed = 120;
             score = 0;
             currentLap = 0;
-            distanceTraveled = 0;
-            speedKmh = 88;
-            targetSpeed = 130;
-            gear = 1;
-            rpm = 4200;
-            playerLane = 1;
-            updatePlayerPosition();
-            opponents = [];
-            spawnCooldown = 6;
-            lateralG = 0;
-            for(let i=0;i<4;i++) spawnOpponent();
-            document.getElementById('scoreValue').innerText = "0";
-            document.getElementById('lapValue').innerText = "0";
-            document.getElementById('raceStatus').innerHTML = "🏁 RACE RESET | PUSH FOR VICTORY 🏁";
+            lapDistance = 0;
+            boostAmount = 100;
+            boosting = false;
+            targetLaneX = 0;
+            currentLaneX = 0;
+            gear = 2;
+            rpm = 5000;
+            // reset opponents positions
+            opponents.forEach((opp, idx) => {
+                opp.z = -12 - idx * 7;
+                opp.x = (Math.random() - 0.5) * 3.2;
+                opp.passed = false;
+                opp.obj.position.set(opp.x, 0.1, opp.z);
+                if (oppLabels[idx]) oppLabels[idx].position.set(opp.x, 0.9, opp.z);
+            });
             updateUI();
+            statusElem.innerText = "🏁 RACE RESTARTED! 3 LAPS TO VICTORY 🏁";
+            camera.position.set(0, 2.5, -6.5);
         }
         
-        // attach events
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        const restartBtn = document.getElementById('restartBtn');
-        leftBtn.addEventListener('click', (e) => { e.preventDefault(); moveLeft(); });
-        rightBtn.addEventListener('click', (e) => { e.preventDefault(); moveRight(); });
-        restartBtn.addEventListener('click', (e) => { e.preventDefault(); restartGame(); });
+        // Attach event listeners
+        document.getElementById('leftBtn').addEventListener('click', (e) => { e.preventDefault(); moveLeft(); });
+        document.getElementById('rightBtn').addEventListener('click', (e) => { e.preventDefault(); moveRight(); });
+        document.getElementById('boostBtn').addEventListener('click', (e) => { e.preventDefault(); useBoost(); });
+        document.getElementById('restartBtn').addEventListener('click', (e) => { e.preventDefault(); restartGame(); });
         window.addEventListener('keydown', (e) => {
-            if(e.key === 'ArrowLeft') { e.preventDefault(); moveLeft(); }
-            else if(e.key === 'ArrowRight') { e.preventDefault(); moveRight(); }
-            else if(e.key === 'r' || e.key === 'R') restartGame();
-        });
-        // touch devices
-        [leftBtn, rightBtn, restartBtn].forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if(btn.id === 'leftBtn') moveLeft();
-                if(btn.id === 'rightBtn') moveRight();
-                if(btn.id === 'restartBtn') restartGame();
-            });
+            if (e.key === 'ArrowLeft') moveLeft();
+            if (e.key === 'ArrowRight') moveRight();
+            if (e.key === ' ' || e.key === 'Shift') { e.preventDefault(); useBoost(); }
+            if (e.key === 'r') restartGame();
         });
         
-        // initialization
-        updatePlayerPosition();
+        // Touch handling for mobile buttons is built-in
+        
+        // --- Animation Loop ---
+        let lastTime = performance.now();
+        function animate() {
+            const now = performance.now();
+            let dt = Math.min(0.033, (now - lastTime) / 1000);
+            lastTime = now;
+            if (dt < 0.008) dt = 0.016;
+            
+            if (gameActive) {
+                updatePhysics(dt);
+                updateOpponents(dt);
+                updateCarPosition(dt);
+                animateRoadDetails(dt);
+                updateUI();
+                // show boost on HUD via telemetry feeling (update boost display optionally)
+                if (boostAmount < 25 && gameActive) {
+                    // visual hint
+                    document.getElementById('boostBtn').style.opacity = boostAmount<15?'0.7':'1';
+                } else {
+                    document.getElementById('boostBtn').style.opacity = '1';
+                }
+            } else {
+                // slight idle animation
+                carGroup.rotation.z = Math.sin(Date.now() * 0.01) * 0.05;
+            }
+            
+            // Animate sun light direction
+            sunLight.position.x = 5 + Math.sin(Date.now() * 0.0005) * 1;
+            
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        
+        // initial reset
         restartGame();
-        mainLoop();
-    })();
-</script>
+        animate();
+        
+        // handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // small starfield effect
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 800;
+        const starPos = [];
+        for (let i = 0; i < starCount; i++) {
+            starPos.push((Math.random() - 0.5) * 400);
+            starPos.push((Math.random() - 0.5) * 150);
+            starPos.push((Math.random() - 0.5) * 100 - 50);
+        }
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPos), 3));
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.2 });
+        const stars = new THREE.Points(starGeometry, starMat);
+        scene.add(stars);
+    </script>
 </body>
 </html>
