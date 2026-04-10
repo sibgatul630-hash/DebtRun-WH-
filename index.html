@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mercedes W05 Hybrid | 10 Laps | Real Track | F1 Grand Prix</title>
+    <title>Mercedes W05 Hybrid | Cockpit POV | 10 Laps | F1 Simulator</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Orbitron', monospace; touch-action: none; background: #000; }
         #hud { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 10; text-shadow: 0 0 5px black; }
@@ -17,6 +17,7 @@
         .brake-btn { background: radial-gradient(circle at 30% 20%, #8B0000, #4a0000); color: #ffaaaa; }
         .restart-btn { background: radial-gradient(circle at 30% 20%, #5a2a2a, #2f1010); color: #ffaa99; }
         .boost-btn { background: radial-gradient(circle at 30% 20%, #1e4a2e, #0a2a18); color: #aaffcc; }
+        .camera-btn { background: radial-gradient(circle at 30% 20%, #3a3a5a, #1a1a3a); color: #aaccff; }
         .status-text { background: rgba(0,0,0,0.7); padding: 5px 18px; border-radius: 40px; margin-top: 12px; font-size: 12px; font-weight: bold; }
         @media (max-width: 700px) { button { padding: 6px 12px; font-size: 0.9rem; min-width: 65px; } .telemetry-value { font-size: 16px; } .telemetry-panel { gap: 10px; padding: 5px 12px; } }
         #instructions { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #ccc; pointer-events: none; z-index: 10; }
@@ -29,6 +30,7 @@
         .finish-sub { font-size: 20px; color: #ffdd99; margin-bottom: 30px; }
         .finish-btn { background: #e10600; color: white; padding: 12px 32px; border-radius: 40px; font-size: 18px; border: none; cursor: pointer; font-family: monospace; font-weight: bold; pointer-events: auto; }
         .corner-warning { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(255,50,0,0.9); padding: 6px 18px; border-radius: 30px; font-size: 14px; font-weight: bold; color: white; pointer-events: none; z-index: 10; transition: opacity 0.3s; opacity: 0; white-space: nowrap; font-family: monospace; }
+        .camera-indicator { position: absolute; top: 80px; right: 20px; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 20px; font-size: 11px; color: #00D2BE; pointer-events: none; z-index: 10; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -45,13 +47,15 @@
             <button id="rightBtn">RIGHT ▶</button>
             <button id="brakeBtn" class="brake-btn">🛑 BRAKE</button>
             <button id="boostBtn" class="boost-btn">⚡ ERS</button>
+            <button id="cameraBtn" class="camera-btn">🎥 COCKPIT</button>
             <button id="restartBtn" class="restart-btn">⟳ RESTART</button>
         </div>
-        <div class="status-text" id="raceStatus">🏁 W05 HYBRID | 10 LAPS | SMOOTH CORNERS | OVERTAKE TO WIN 🏁</div>
+        <div class="status-text" id="raceStatus">🏁 COCKPIT VIEW | 10 LAPS | SMOOTH CORNERS | OVERTAKE 🏁</div>
     </div>
     <div class="boost-bar"><div class="boost-fill" id="boostFill"></div></div>
-    <div id="instructions">← → | BRAKE (↓) | ERS (SPACE) | 10 LAPS WITH CORNERS</div>
+    <div id="instructions">← → | BRAKE (↓) | ERS (SPACE) | CAMERA (C) | 10 LAPS</div>
     <div class="corner-warning" id="cornerWarning">⚠️ CORNER AHEAD - BRAKE! ⚠️</div>
+    <div class="camera-indicator" id="cameraIndicator">🎥 CHASE CAM</div>
     <div id="finishOverlay" class="finish-overlay">
         <div class="finish-text">🏆 GRAND PRIX WINNER! 🏆</div>
         <div class="finish-sub">10 LAPS COMPLETED - MERCEDES W05 HYBRID</div>
@@ -71,7 +75,7 @@
         scene.background = new THREE.Color(0x0a1030);
         scene.fog = new THREE.FogExp2(0x0a1030, 0.002);
         
-        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
@@ -91,42 +95,22 @@
         const sunLight = new THREE.DirectionalLight(0xffeedd, 1.3);
         sunLight.position.set(10, 20, 5);
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 1024;
-        sunLight.shadow.mapSize.height = 1024;
         scene.add(sunLight);
-        const fillLight = new THREE.PointLight(0x4488aa, 0.4);
-        fillLight.position.set(0, 5, 0);
-        scene.add(fillLight);
         
-        // ========== TRACK WITH SMOOTH CORNERS (VISIBLE) ==========
-        // Create track points for a flowing circuit
+        // ========== TRACK ==========
         const trackPoints = [
-            new THREE.Vector3(0, 0, -50),   
-            new THREE.Vector3(0, 0, -30),
-            new THREE.Vector3(0, 0, -10),
-            new THREE.Vector3(3, 0, 10),    
-            new THREE.Vector3(5, 0, 30),
-            new THREE.Vector3(4, 0, 50),
-            new THREE.Vector3(2, 0, 70),
-            new THREE.Vector3(0, 0, 90),    
-            new THREE.Vector3(-3, 0, 110),  
-            new THREE.Vector3(-5, 0, 130),
-            new THREE.Vector3(-4, 0, 150),
-            new THREE.Vector3(-2, 0, 170),
-            new THREE.Vector3(0, 0, 190),   
-            new THREE.Vector3(2, 0, 210),   
-            new THREE.Vector3(3, 0, 230),
-            new THREE.Vector3(0, 0, 250),   
-            new THREE.Vector3(-2, 0, 270),
-            new THREE.Vector3(0, 0, 290),
-            new THREE.Vector3(0, 0, 310),
-            new THREE.Vector3(0, 0, 330)
+            new THREE.Vector3(0, 0, -50), new THREE.Vector3(0, 0, -30), new THREE.Vector3(0, 0, -10),
+            new THREE.Vector3(3, 0, 10), new THREE.Vector3(5, 0, 30), new THREE.Vector3(4, 0, 50),
+            new THREE.Vector3(2, 0, 70), new THREE.Vector3(0, 0, 90), new THREE.Vector3(-3, 0, 110),
+            new THREE.Vector3(-5, 0, 130), new THREE.Vector3(-4, 0, 150), new THREE.Vector3(-2, 0, 170),
+            new THREE.Vector3(0, 0, 190), new THREE.Vector3(2, 0, 210), new THREE.Vector3(3, 0, 230),
+            new THREE.Vector3(0, 0, 250), new THREE.Vector3(-2, 0, 270), new THREE.Vector3(0, 0, 290),
+            new THREE.Vector3(0, 0, 310), new THREE.Vector3(0, 0, 330)
         ];
         
         const curve = new THREE.CatmullRomCurve3(trackPoints);
         curve.curveType = 'centripetal';
         
-        // Create VISIBLE track mesh
         const tubeGeometry = new THREE.TubeGeometry(curve, 200, 3.5, 20, false);
         const trackMat = new THREE.MeshStandardMaterial({ color: 0x2a2f3e, roughness: 0.5, metalness: 0.1 });
         const trackMesh = new THREE.Mesh(tubeGeometry, trackMat);
@@ -134,49 +118,22 @@
         trackMesh.castShadow = true;
         scene.add(trackMesh);
         
-        // Add white track lines (center line)
+        // Track lines
         const linePoints = [];
-        for (let i = 0; i <= 200; i++) {
-            const t = i / 200;
-            const point = curve.getPoint(t);
-            linePoints.push(point);
-        }
+        for (let i = 0; i <= 200; i++) linePoints.push(curve.getPoint(i / 200));
         const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffcc55 });
-        const centerLine = new THREE.Line(lineGeometry, lineMaterial);
-        scene.add(centerLine);
+        scene.add(new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color: 0xffcc55 })));
         
-        // Add dashed line effect using small cylinders along track
+        // Dashes
         const dashMat = new THREE.MeshStandardMaterial({ color: 0xffaa66 });
         for (let i = 0; i <= 200; i += 8) {
-            const t = i / 200;
-            const point = curve.getPoint(t);
-            const tangent = curve.getTangent(t);
-            const right = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+            const point = curve.getPoint(i / 200);
             const dash = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.6), dashMat);
             dash.position.set(point.x, point.y + 0.05, point.z);
-            dash.castShadow = true;
             scene.add(dash);
         }
         
-        // Add kerbs (red/white) on track edges
-        const kerbMat = new THREE.MeshStandardMaterial({ color: 0xcc3333 });
-        for (let i = 0; i <= 200; i += 3) {
-            const t = i / 200;
-            const point = curve.getPoint(t);
-            const tangent = curve.getTangent(t);
-            const right = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
-            const leftKerb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 0.8), kerbMat);
-            leftKerb.position.set(point.x - right.x * 3.8, point.y - 0.02, point.z - right.z * 3.8);
-            leftKerb.castShadow = true;
-            scene.add(leftKerb);
-            const rightKerb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 0.8), kerbMat);
-            rightKerb.position.set(point.x + right.x * 3.8, point.y - 0.02, point.z + right.z * 3.8);
-            rightKerb.castShadow = true;
-            scene.add(rightKerb);
-        }
-        
-        // Ground/grass plane
+        // Ground
         const groundMat = new THREE.MeshStandardMaterial({ color: 0x2c5a2a, roughness: 0.8 });
         const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(120, 450), groundMat);
         groundPlane.rotation.x = -Math.PI / 2;
@@ -185,7 +142,7 @@
         groundPlane.receiveShadow = true;
         scene.add(groundPlane);
         
-        // Trees around track
+        // Trees
         const treeMat = new THREE.MeshStandardMaterial({ color: 0x4a8a3a });
         for (let i = -200; i <= 450; i += 20) {
             for (let side = -1; side <= 1; side += 2) {
@@ -200,51 +157,60 @@
             }
         }
         
-        // ========== MERCEDES W05 HYBRID CAR ==========
+        // ========== MERCEDES W05 CAR ==========
         const car = new THREE.Group();
         
+        // Chassis
         const chassisMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.85, roughness: 0.25 });
         const monocoque = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.38, 2.4), chassisMat);
         monocoque.castShadow = true;
         monocoque.position.y = 0.15;
         car.add(monocoque);
         
-        const engineMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.8 });
-        const engineCover = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.62, 1.1, 16), engineMat);
+        const engineCover = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.62, 1.1, 16), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.8 }));
         engineCover.position.set(0, 0.32, -0.85);
-        engineCover.castShadow = true;
         car.add(engineCover);
         
-        const noseMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.75 });
-        const noseBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, 1.15, 12), noseMat);
+        const noseBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, 1.15, 12), new THREE.MeshStandardMaterial({ color: 0x444444 }));
         noseBase.rotation.x = 0.15;
         noseBase.position.set(0, 0.18, 1.35);
         car.add(noseBase);
         
-        const noseTip = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.45), noseMat);
-        noseTip.position.set(0, 0.12, 1.85);
-        car.add(noseTip);
+        const frontWing = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.08, 0.42), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+        frontWing.position.set(0, 0.06, 2.05);
+        car.add(frontWing);
         
-        const wingMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7 });
-        const frontWingMain = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.08, 0.42), wingMat);
-        frontWingMain.position.set(0, 0.06, 2.05);
-        car.add(frontWingMain);
-        
-        const podMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.7 });
+        // Sidepods
+        const podMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
         const leftPod = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.28, 1.35), podMat);
         leftPod.position.set(-0.85, 0.12, -0.25);
-        leftPod.castShadow = true;
         car.add(leftPod);
         const rightPod = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.28, 1.35), podMat);
         rightPod.position.set(0.85, 0.12, -0.25);
-        rightPod.castShadow = true;
         car.add(rightPod);
         
-        const cockpitMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-        const cockpit = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.14, 0.85), cockpitMat);
-        cockpit.position.set(0, 0.38, -0.25);
-        car.add(cockpit);
+        // Cockpit interior (visible from inside)
+        const cockpitInterior = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.14, 0.85), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        cockpitInterior.position.set(0, 0.38, -0.25);
+        car.add(cockpitInterior);
         
+        // Steering wheel (animated)
+        const steeringGroup = new THREE.Group();
+        const wheelRim = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.03, 16, 32), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 }));
+        steeringGroup.add(wheelRim);
+        const wheelCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.04, 8), new THREE.MeshStandardMaterial({ color: 0x00D2BE }));
+        wheelCenter.position.z = 0.02;
+        steeringGroup.add(wheelCenter);
+        const wheelGrip = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x444444 }));
+        wheelGrip.position.y = 0.12;
+        steeringGroup.add(wheelGrip);
+        const wheelGripB = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.05, 0.05), new THREE.MeshStandardMaterial({ color: 0x444444 }));
+        wheelGripB.position.y = -0.12;
+        steeringGroup.add(wheelGripB);
+        steeringGroup.position.set(0, 0.42, 0.15);
+        car.add(steeringGroup);
+        
+        // Halo
         const haloMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 });
         const haloLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.58, 6), haloMat);
         haloLeft.position.set(-0.34, 0.62, -0.15);
@@ -258,17 +224,18 @@
         haloTop.position.set(0, 0.66, -0.12);
         car.add(haloTop);
         
-        const helmetMat = new THREE.MeshStandardMaterial({ color: 0x00D2BE });
-        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), helmetMat);
+        // Helmet (visible in chase cam)
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), new THREE.MeshStandardMaterial({ color: 0x00D2BE }));
         helmet.position.set(0, 0.48, 0.05);
         car.add(helmet);
         
-        const rearWingMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.75 });
-        const rearMain = new THREE.Mesh(new THREE.BoxGeometry(1.08, 0.14, 0.42), rearWingMat);
-        rearMain.position.set(0, 0.48, -1.45);
-        car.add(rearMain);
+        // Rear wing
+        const rearWing = new THREE.Mesh(new THREE.BoxGeometry(1.08, 0.14, 0.42), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+        rearWing.position.set(0, 0.48, -1.45);
+        car.add(rearWing);
         
-        const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
+        // Wheels
+        const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
         const rimMat = new THREE.MeshStandardMaterial({ color: 0xCCAA77, metalness: 0.8 });
         const wheelPos = [[-0.78, 0.1, 1.05], [0.78, 0.1, 1.05], [-0.78, 0.1, -1.05], [0.78, 0.1, -1.05]];
         wheelPos.forEach(pos => {
@@ -283,6 +250,7 @@
             car.add(wheel);
         });
         
+        // Petronas stripes
         const tealMat = new THREE.MeshStandardMaterial({ color: 0x00D2BE });
         const sideStripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 1.55), tealMat);
         sideStripe.position.set(0.62, 0.28, -0.15);
@@ -291,6 +259,7 @@
         sideStripeL.position.set(-0.62, 0.28, -0.15);
         car.add(sideStripeL);
         
+        // Number 44
         const numCanvas = document.createElement('canvas');
         numCanvas.width = 128;
         numCanvas.height = 64;
@@ -322,11 +291,7 @@
             
             const labelDiv = document.createElement('div');
             labelDiv.textContent = `RIVAL ${i+1}`;
-            labelDiv.style.color = '#ffaa77';
-            labelDiv.style.fontSize = '10px';
-            labelDiv.style.background = 'rgba(0,0,0,0.6)';
-            labelDiv.style.padding = '2px 8px';
-            labelDiv.style.borderRadius = '20px';
+            labelDiv.style.cssText = 'color:#ffaa77;font-size:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:20px;';
             const label = new CSS2DObject(labelDiv);
             scene.add(label);
             opponents.push({ obj: group, label: label, t: 0.06 + i * 0.035, passed: false });
@@ -335,9 +300,7 @@
         // Stars
         const starGeo = new THREE.BufferGeometry();
         const stars = [];
-        for (let i = 0; i < 1500; i++) {
-            stars.push((Math.random() - 0.5) * 600, (Math.random() - 0.5) * 300, (Math.random() - 0.5) * 200 - 100);
-        }
+        for (let i = 0; i < 1500; i++) stars.push((Math.random() - 0.5) * 600, (Math.random() - 0.5) * 300, (Math.random() - 0.5) * 200 - 100);
         starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(stars), 3));
         scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.2 })));
         
@@ -356,18 +319,9 @@
         let targetX = 0;
         let currentX = 0;
         const MAX_X = 2.2;
+        let cameraMode = 'chase'; // 'chase' or 'cockpit'
         
-        const cornerWarningEl = document.getElementById('cornerWarning');
-        let warningTimeout = null;
-        
-        function showCornerWarning() {
-            cornerWarningEl.style.opacity = '1';
-            if (warningTimeout) clearTimeout(warningTimeout);
-            warningTimeout = setTimeout(() => {
-                cornerWarningEl.style.opacity = '0';
-            }, 700);
-        }
-        
+        // UI Elements
         const speedEl = document.getElementById('speedDisplay');
         const gearEl = document.getElementById('gearDisplay');
         const lapEl = document.getElementById('lapDisplay');
@@ -375,6 +329,15 @@
         const statusEl = document.getElementById('raceStatus');
         const boostFill = document.getElementById('boostFill');
         const finishOverlay = document.getElementById('finishOverlay');
+        const cornerWarningEl = document.getElementById('cornerWarning');
+        const cameraIndicator = document.getElementById('cameraIndicator');
+        
+        let warningTimeout = null;
+        function showCornerWarning() {
+            cornerWarningEl.style.opacity = '1';
+            if (warningTimeout) clearTimeout(warningTimeout);
+            warningTimeout = setTimeout(() => { cornerWarningEl.style.opacity = '0'; }, 700);
+        }
         
         function updateUI() {
             speedEl.innerText = Math.floor(speed);
@@ -387,10 +350,17 @@
         function showVictory() { finishOverlay.classList.add('show'); }
         function hideVictory() { finishOverlay.classList.remove('show'); }
         
+        function toggleCamera() {
+            cameraMode = cameraMode === 'chase' ? 'cockpit' : 'chase';
+            cameraIndicator.innerHTML = cameraMode === 'chase' ? '🎥 CHASE CAM' : '🎮 COCKPIT VIEW';
+            statusEl.innerText = cameraMode === 'chase' ? '🏁 CHASE CAM | 10 LAPS 🏁' : '🏎️ COCKPIT VIEW | STEERING WHEEL 🏎️';
+        }
+        
         function getTrackPosition(t) { return curve.getPoint(t); }
         function getTrackTangent(t) { return curve.getTangent(t); }
         
         let lastTime = performance.now();
+        let steeringAngle = 0;
         
         function update(dt) {
             if (!gameActive) return;
@@ -445,7 +415,7 @@
                     statusEl.innerText = `✅ LAP ${currentLap}/10 COMPLETE! +160 PTS`;
                     updateUI();
                     setTimeout(() => {
-                        if (gameActive) statusEl.innerText = "🏁 10 LAP RACE | OVERTAKE RIVALS 🏁";
+                        if (gameActive) statusEl.innerText = cameraMode === 'chase' ? "🏁 10 LAP RACE 🏁" : "🏎️ COCKPIT MODE 🏎️";
                     }, 1800);
                 }
                 updateUI();
@@ -458,6 +428,10 @@
             currentX += (targetX - currentX) * 0.28;
             currentX = Math.min(MAX_X, Math.max(-MAX_X, currentX));
             
+            // Update steering wheel animation
+            steeringAngle = currentX * 0.5;
+            steeringGroup.rotation.z = steeringAngle;
+            
             car.position.x = carPos.x + right.x * currentX;
             car.position.z = carPos.z + right.z * currentX;
             car.position.y = carPos.y + 0.12;
@@ -466,11 +440,27 @@
             car.rotation.y = angle;
             car.rotation.z = currentX * 0.07;
             
-            const camOffset = new THREE.Vector3(0, 1.8, -6.8);
-            const camWorldPos = car.position.clone().add(camOffset);
-            camera.position.lerp(camWorldPos, 0.12);
-            camera.lookAt(car.position);
+            // CAMERA POSITIONING
+            if (cameraMode === 'chase') {
+                // Chase camera
+                const camOffset = new THREE.Vector3(0, 1.8, -6.8);
+                const camWorldPos = car.position.clone().add(camOffset);
+                camera.position.lerp(camWorldPos, 0.12);
+                camera.lookAt(car.position);
+            } else {
+                // COCKPIT VIEW - from driver's eyes
+                const driverEyeOffset = new THREE.Vector3(0, 0.52, 0.35);
+                const eyePos = car.position.clone().add(driverEyeOffset);
+                camera.position.lerp(eyePos, 0.1);
+                
+                // Look ahead along the track
+                const lookAheadT = Math.min(1, lapProgress + 0.03);
+                const lookPos = getTrackPosition(lookAheadT);
+                const targetLook = new THREE.Vector3(lookPos.x, lookPos.y + 0.3, lookPos.z);
+                camera.lookAt(targetLook);
+            }
             
+            // Update opponents
             for (let opp of opponents) {
                 opp.t += speed * dt * 0.00065 * 0.83;
                 if (opp.t >= 1) opp.t -= 1;
@@ -500,7 +490,7 @@
                         updateUI();
                         statusEl.innerText = "🏁 OVERTAKE! +50 PTS 🏁";
                         setTimeout(() => {
-                            if (gameActive) statusEl.innerText = "🔥 10 LAPS - KEEP PUSHING 🔥";
+                            if (gameActive) statusEl.innerText = cameraMode === 'chase' ? "🔥 KEEP PUSHING 🔥" : "🏎️ COCKPIT RACING 🏎️";
                         }, 1000);
                     }
                 }
@@ -508,6 +498,7 @@
             }
         }
         
+        // Controls
         function moveLeft() { if (gameActive) targetX = Math.max(-MAX_X, targetX - 1.4); }
         function moveRight() { if (gameActive) targetX = Math.min(MAX_X, targetX + 1.4); }
         function brakeOn() { if (gameActive) braking = true; }
@@ -518,7 +509,7 @@
                 boosting = true;
                 statusEl.innerText = "⚡ ERS BOOST ACTIVE! ⚡";
                 setTimeout(() => {
-                    if (gameActive && boosting) statusEl.innerText = "🏎️ FULL POWER 🏎️";
+                    if (gameActive && boosting) statusEl.innerText = cameraMode === 'chase' ? "🏎️ FULL POWER 🏎️" : "⚡ BOOSTING ⚡";
                 }, 800);
             } else if (boost < 12) {
                 statusEl.innerText = "⚠️ ERS CHARGING ⚠️";
@@ -543,9 +534,10 @@
                 opp.passed = false;
             });
             updateUI();
-            statusEl.innerText = "🏁 RACE RESTARTED! 10 LAPS TO WIN 🏁";
+            statusEl.innerText = cameraMode === 'chase' ? "🏁 RACE RESTARTED! 10 LAPS 🏁" : "🏎️ COCKPIT VIEW - RACE RESTARTED 🏎️";
         }
         
+        // Event listeners
         document.getElementById('leftBtn').onclick = (e) => { e.preventDefault(); moveLeft(); };
         document.getElementById('rightBtn').onclick = (e) => { e.preventDefault(); moveRight(); };
         document.getElementById('brakeBtn').onmousedown = brakeOn;
@@ -554,6 +546,7 @@
         document.getElementById('brakeBtn').ontouchstart = (e) => { e.preventDefault(); brakeOn(); };
         document.getElementById('brakeBtn').ontouchend = (e) => { e.preventDefault(); brakeOff(); };
         document.getElementById('boostBtn').onclick = (e) => { e.preventDefault(); useBoost(); };
+        document.getElementById('cameraBtn').onclick = (e) => { e.preventDefault(); toggleCamera(); };
         document.getElementById('restartBtn').onclick = (e) => { e.preventDefault(); restartGame(); };
         document.getElementById('finishRestartBtn').onclick = (e) => { restartGame(); };
         
@@ -562,6 +555,7 @@
             if (e.key === 'ArrowRight') moveRight();
             if (e.key === 'ArrowDown' || e.key === 's') brakeOn();
             if (e.key === ' ' || e.key === 'Shift') { e.preventDefault(); useBoost(); }
+            if (e.key === 'c' || e.key === 'C') toggleCamera();
             if (e.key === 'r') restartGame();
         };
         window.onkeyup = (e) => {
