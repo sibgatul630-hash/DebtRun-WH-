@@ -1,71 +1,608 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>F1 Mini Game</title>
-  <style>
-    body {
-      margin: 0;
-      background: #0b0b0f;
-      color: white;
-      text-align: center;
-      font-family: Arial;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>F1 Edge Racer — Grand Prix Dash</title>
+    <style>
+        * {
+            user-select: none;
+            touch-action: manipulation;
+            box-sizing: border-box;
+        }
 
-    #track {
-      position: relative;
-      width: 300px;
-      height: 500px;
-      margin: 20px auto;
-      background: #222;
-      overflow: hidden;
-      border: 2px solid red;
-    }
+        body {
+            background: linear-gradient(145deg, #0a0f1a 0%, #03060c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Orbitron', 'Rajdhani', 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
 
-    #car {
-      position: absolute;
-      bottom: 20px;
-      left: 130px;
-      width: 40px;
-      height: 70px;
-      background: red;
-      border-radius: 10px;
-    }
+        /* main game container */
+        .game-container {
+            background: #000000aa;
+            border-radius: 48px;
+            padding: 20px 20px 24px;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.08);
+        }
 
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-    }
-  </style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 20px;
+            box-shadow: 0 12px 28px black;
+            cursor: pointer;
+            background: #0b1120;
+            width: 100%;
+            height: auto;
+        }
+
+        /* F1 style info panel */
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 18px;
+            padding: 0 8px;
+            color: #ffd966;
+            text-shadow: 0 0 3px #ff5500;
+            font-weight: bold;
+        }
+
+        .speed-box, .score-box, .laps-box {
+            background: #0e121fcc;
+            backdrop-filter: blur(4px);
+            padding: 6px 18px;
+            border-radius: 60px;
+            border-left: 4px solid #e10600;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 1px;
+        }
+
+        .speed-box span, .score-box span, .laps-box span {
+            color: white;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+
+        .speed-value, .score-value, .lap-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffc857;
+        }
+
+        /* button grid — responsive for any screen (touch/click) */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: radial-gradient(circle at 20% 30%, #2a2f3f, #0f121e);
+            border: none;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            font-size: 1.6rem;
+            padding: 12px 28px;
+            min-width: 100px;
+            border-radius: 80px;
+            color: #ffde9c;
+            text-shadow: 0 1px 1px black;
+            box-shadow: 0 8px 0 #03060c;
+            cursor: pointer;
+            transition: 0.07s linear;
+            touch-action: manipulation;
+            letter-spacing: 2px;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #03060c;
+        }
+
+        .restart-btn {
+            background: radial-gradient(circle at 20% 30%, #3a2a2f, #1f1216);
+            color: #ffaa88;
+            box-shadow: 0 8px 0 #4a1010;
+        }
+
+        @media (max-width: 620px) {
+            .btn {
+                padding: 10px 20px;
+                font-size: 1.2rem;
+                min-width: 70px;
+            }
+            .speed-value, .score-value, .lap-value {
+                font-size: 1.2rem;
+            }
+            .info-panel {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .controls {
+                gap: 10px;
+            }
+            .btn {
+                padding: 8px 16px;
+                font-size: 1rem;
+                min-width: 65px;
+            }
+        }
+
+        .game-status {
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 14px;
+            color: #ff9966;
+            background: #00000088;
+            display: inline-block;
+            width: auto;
+            padding: 4px 16px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 11px;
+            color: #5f6a7a;
+        }
+    </style>
 </head>
 <body>
+<div>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="500" style="width:100%; height:auto; max-width:800px; aspect-ratio:800/500"></canvas>
 
-<h2>🏎️ F1 Mini Game</h2>
+        <div class="info-panel">
+            <div class="speed-box"><span>🏁 SPEED</span> <span class="speed-value" id="speedValue">0</span> <span>km/h</span></div>
+            <div class="score-box"><span>🏆 SCORE</span> <span class="score-value" id="scoreValue">0</span></div>
+            <div class="laps-box"><span>🔄 LAP</span> <span class="lap-value" id="lapValue">0</span> <span>/ 3</span></div>
+        </div>
 
-<div id="track">
-  <div id="car"></div>
+        <div class="controls">
+            <button class="btn" id="leftBtn">◀ LEFT</button>
+            <button class="btn" id="rightBtn">RIGHT ▶</button>
+            <button class="btn restart-btn" id="restartBtn">⟳ RESTART</button>
+        </div>
+        <div style="display: flex; justify-content: center; margin-top: 12px;">
+            <div class="game-status" id="gameStatusText">🏎️ PRESS LEFT/RIGHT — OVERTAKE CARS! 🏁</div>
+        </div>
+        <footer>⚡ F1 DASH • avoid rivals • complete 3 laps to win</footer>
+    </div>
 </div>
 
-<button onclick="moveLeft()">⬅ Left</button>
-<button onclick="moveRight()">Right ➡</button>
-
 <script>
-  let car = document.getElementById("car");
-  let position = 130;
+    (function(){
+        // ----- CANVAS -----
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-  function moveLeft() {
-    if (position > 0) {
-      position -= 20;
-      car.style.left = position + "px";
-    }
-  }
+        // ----- GAME DIMENSIONS (fixed logical 800x500)
+        const LANE_COUNT = 3;
+        const LANE_WIDTH = 800 / LANE_COUNT;  // ~266.66
+        const CAR_WIDTH = 48;
+        const CAR_HEIGHT = 70;
 
-  function moveRight() {
-    if (position < 260) {
-      position += 20;
-      car.style.left = position + "px";
-    }
-  }
+        // Player start lane (center lane = lane 1, index 1)
+        let playerLane = 1;      // 0:left, 1:mid, 2:right
+        let playerX = (playerLane * LANE_WIDTH) + (LANE_WIDTH/2) - CAR_WIDTH/2;
+        const FIXED_PLAYER_Y = 400;  // bottom area
+
+        // ----- GAME STATE -----
+        let score = 0;            // points per overtake
+        let currentLap = 0;      // 0 to 3 (finish when lap >=3)
+        let gameActive = true;
+        let gameWin = false;
+        let speed = 180;          // base speed km/h (affects scroll)
+        let baseScrollSpeed = 4.2;   // scroll factor (pixels per frame)
+        
+        // opponent cars array
+        let opponents = [];
+        
+        // track marking offset (for road lines)
+        let roadOffset = 0;
+        
+        // frame rate / lap counting mechanism: count distance traveled
+        let distanceTraveled = 0;
+        let distancePerLap = 1800;   // total scroll units needed per lap
+        // when distanceTraveled >= distancePerLap -> lap++
+        
+        // spawn timer
+        let spawnCounter = 0;
+        let spawnDelay = 45;   // frames between spawns (decreases with speed)
+        
+        // ----- HELPER FUNCTIONS -----
+        function updatePlayerXFromLane(){
+            let laneCenterX = (playerLane * LANE_WIDTH) + (LANE_WIDTH/2);
+            playerX = laneCenterX - CAR_WIDTH/2;
+            // boundaries safety
+            playerX = Math.min(Math.max(playerX, 4), canvas.width - CAR_WIDTH - 4);
+        }
+        
+        // add opponent car (lane, y pos negative start)
+        function spawnOpponent(){
+            if(!gameActive) return;
+            const lane = Math.floor(Math.random() * LANE_COUNT);
+            const laneCenterX = (lane * LANE_WIDTH) + (LANE_WIDTH/2);
+            let xPos = laneCenterX - CAR_WIDTH/2;
+            // ensure within canvas
+            xPos = Math.min(Math.max(xPos, 4), canvas.width - CAR_WIDTH - 4);
+            opponents.push({
+                x: xPos,
+                y: -CAR_HEIGHT - Math.random() * 60,
+                lane: lane,
+                width: CAR_WIDTH,
+                height: CAR_HEIGHT
+            });
+        }
+        
+        // reset game fully
+        function restartGame(){
+            gameActive = true;
+            gameWin = false;
+            score = 0;
+            currentLap = 0;
+            distanceTraveled = 0;
+            speed = 180;
+            baseScrollSpeed = 4.2;
+            opponents = [];
+            playerLane = 1;
+            updatePlayerXFromLane();
+            spawnCounter = 8;
+            // initial opponents: spawn 2~3 cars ahead
+            for(let i=0;i<3;i++){
+                spawnOpponent();
+            }
+            document.getElementById('scoreValue').innerText = "0";
+            document.getElementById('lapValue').innerText = "0";
+            document.getElementById('speedValue').innerText = "180";
+            document.getElementById('gameStatusText').innerHTML = "🏁 RACE RESUMED! COMPLETE 3 LAPS 🏁";
+        }
+        
+        // collision detection (rect intersect)
+        function checkCollision(playerRect, oppRect){
+            return !(playerRect.x + playerRect.w < oppRect.x ||
+                oppRect.x + oppRect.w < playerRect.x ||
+                playerRect.y + playerRect.h < oppRect.y ||
+                oppRect.y + oppRect.h < playerRect.y);
+        }
+        
+        // update game logic each frame
+        function updateGame(){
+            if(!gameActive) return;
+            
+            // dynamic speed effect: speed increases with score (up to 380 km/h)
+            let targetSpeed = 180 + Math.floor(score / 28);
+            targetSpeed = Math.min(targetSpeed, 390);
+            speed = speed * 0.98 + targetSpeed * 0.02; // smooth
+            if(speed < 150) speed = 150;
+            let scrollDelta = baseScrollSpeed * (speed / 190);
+            scrollDelta = Math.min(scrollDelta, 9.5);
+            
+            // update distance traveled for laps
+            distanceTraveled += scrollDelta;
+            if(distanceTraveled >= distancePerLap){
+                distanceTraveled -= distancePerLap;
+                if(gameActive && !gameWin){
+                    currentLap++;
+                    document.getElementById('lapValue').innerText = currentLap;
+                    // bonus score for lap completion
+                    if(currentLap <= 3){
+                        score += 120;
+                        updateScoreUI();
+                    }
+                    if(currentLap >= 3){
+                        // WIN CONDITION
+                        gameActive = false;
+                        gameWin = true;
+                        document.getElementById('gameStatusText').innerHTML = "🏆 YOU WIN! GRAND PRIX CHAMPION! 🏆  ▶ RESTART ◀";
+                        return;
+                    }
+                }
+            }
+            
+            // move opponents and check overtake (score) + collision
+            for(let i=0; i<opponents.length; i++){
+                const opp = opponents[i];
+                opp.y += scrollDelta;
+                
+                // Overtake condition: opponent passed below player without collision (y + height > player y + some margin)
+                // we check if opponent just passed player's rear (y > playerY + CAR_HEIGHT) AND not flagged as counted
+                if(!opp.counted && opp.y + CAR_HEIGHT > FIXED_PLAYER_Y && opp.y < FIXED_PLAYER_Y + CAR_HEIGHT + 15){
+                    // currently overlapping region, but we need to ensure it's passing below -> actually we use flag when it goes below
+                }
+                if(!opp.counted && opp.y + CAR_HEIGHT >= FIXED_PLAYER_Y + CAR_HEIGHT + 5){
+                    // opponent completely passed player without crash => OVERTAKE
+                    opp.counted = true;
+                    if(gameActive){
+                        score += 35;
+                        updateScoreUI();
+                        // small visual thrill: speed burst effect (just micro)
+                        speed = Math.min(speed + 8, 410);
+                    }
+                }
+            }
+            
+            // collision detection (only if game active)
+            const playerRect = {
+                x: playerX,
+                y: FIXED_PLAYER_Y,
+                w: CAR_WIDTH,
+                h: CAR_HEIGHT
+            };
+            
+            for(let i=0; i<opponents.length; i++){
+                const opp = opponents[i];
+                const oppRect = { x: opp.x, y: opp.y, w: CAR_WIDTH, h: CAR_HEIGHT };
+                if(checkCollision(playerRect, oppRect)){
+                    // CRASH!
+                    gameActive = false;
+                    gameWin = false;
+                    document.getElementById('gameStatusText').innerHTML = "💥 CRASH! GAME OVER. PRESS RESTART 💥";
+                    return;
+                }
+            }
+            
+            // remove offscreen opponents (y > canvas height + 150)
+            opponents = opponents.filter(opp => opp.y < canvas.height + 200);
+            
+            // dynamic spawn: faster when higher speed, also lower delay
+            let dynamicSpawnDelay = Math.max(22, 48 - Math.floor(speed / 24));
+            if(spawnCounter <= 0){
+                if(gameActive){
+                    spawnOpponent();
+                    // sometimes double spawn for intensity? but only single for fair
+                    if(Math.random()<0.2 && speed>240) spawnOpponent();
+                }
+                spawnCounter = dynamicSpawnDelay;
+            } else {
+                spawnCounter--;
+            }
+            
+            // update speed UI
+            document.getElementById('speedValue').innerText = Math.floor(speed);
+            // update score UI if needed
+            function updateScoreUI(){
+                document.getElementById('scoreValue').innerText = Math.floor(score);
+            }
+            updateScoreUI(); // call each frame to sync score display
+            
+            // road scrolling effect offset
+            roadOffset = (roadOffset + scrollDelta * 0.5) % 40;
+        }
+        
+        // ----- DRAW EVERYTHING (F1 Style asphalt + cars) -----
+        function drawRoad(){
+            // base asphalt
+            ctx.fillStyle = "#12161f";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // track lines (dashed racing line)
+            for(let i=1; i<LANE_COUNT; i++){
+                let lineX = i * LANE_WIDTH;
+                ctx.beginPath();
+                ctx.setLineDash([25, 30]);
+                ctx.strokeStyle = "#ffcc44";
+                ctx.lineWidth = 5;
+                ctx.shadowBlur = 0;
+                ctx.moveTo(lineX, 0);
+                ctx.lineTo(lineX, canvas.height);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            // kerbs / edge stripes
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = "#e10600";
+            ctx.strokeRect(6, 6, canvas.width-12, canvas.height-12);
+            ctx.beginPath();
+            ctx.strokeStyle = "#ffffff80";
+            ctx.lineWidth = 2;
+            for(let i=0;i<12;i++){
+                let yOff = (roadOffset + i*45) % canvas.height;
+                ctx.fillStyle = "#dddddd";
+                ctx.fillRect(20, yOff, 12, 28);
+                ctx.fillRect(canvas.width-32, yOff, 12, 28);
+            }
+            // start/finish line style marking
+            for(let i=0;i<12;i++){
+                let patternY = (roadOffset*1.5 + i*60) % canvas.height;
+                ctx.fillStyle = "#ffffffcc";
+                ctx.fillRect(canvas.width/2-60, patternY, 120, 12);
+                ctx.fillStyle = "#ffaa33cc";
+                ctx.fillRect(canvas.width/2-60, patternY+12, 120, 12);
+            }
+        }
+        
+        function drawPlayerCar(){
+            // F1 style car body
+            ctx.save();
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "#ff4400";
+            // main body
+            ctx.fillStyle = "#E10600";
+            ctx.beginPath();
+            ctx.roundRect(playerX, FIXED_PLAYER_Y, CAR_WIDTH, CAR_HEIGHT, 12);
+            ctx.fill();
+            // cockpit halo
+            ctx.fillStyle = "#1e2a3a";
+            ctx.beginPath();
+            ctx.roundRect(playerX+12, FIXED_PLAYER_Y+12, CAR_WIDTH-24, 22, 8);
+            ctx.fill();
+            ctx.fillStyle = "#7fc9ff";
+            ctx.beginPath();
+            ctx.ellipse(playerX+CAR_WIDTH/2, FIXED_PLAYER_Y+22, 10, 8, 0, 0, Math.PI*2);
+            ctx.fill();
+            // wheels
+            ctx.fillStyle = "#111";
+            ctx.fillRect(playerX-6, FIXED_PLAYER_Y+12, 8, 20);
+            ctx.fillRect(playerX+CAR_WIDTH-2, FIXED_PLAYER_Y+12, 8, 20);
+            ctx.fillRect(playerX-6, FIXED_PLAYER_Y+CAR_HEIGHT-32, 8, 20);
+            ctx.fillRect(playerX+CAR_WIDTH-2, FIXED_PLAYER_Y+CAR_HEIGHT-32, 8, 20);
+            // sponsor
+            ctx.font = "bold 14px 'Orbitron'";
+            ctx.fillStyle = "white";
+            ctx.shadowBlur = 2;
+            ctx.fillText("F1", playerX+15, FIXED_PLAYER_Y+CAR_HEIGHT-12);
+            ctx.restore();
+        }
+        
+        function drawOpponents(){
+            for(let opp of opponents){
+                ctx.save();
+                ctx.shadowBlur = 4;
+                ctx.fillStyle = "#2C3E66";
+                ctx.beginPath();
+                ctx.roundRect(opp.x, opp.y, CAR_WIDTH, CAR_HEIGHT, 10);
+                ctx.fill();
+                ctx.fillStyle = "#1B2A44";
+                ctx.beginPath();
+                ctx.roundRect(opp.x+8, opp.y+10, CAR_WIDTH-16, 18, 6);
+                ctx.fill();
+                ctx.fillStyle = "#CCCCDD";
+                ctx.font = "bold 12px monospace";
+                ctx.fillText("RIVAL", opp.x+12, opp.y+28);
+                ctx.fillStyle = "#aaaaff";
+                ctx.fillRect(opp.x+4, opp.y+CAR_HEIGHT-14, 12, 8);
+                ctx.fillRect(opp.x+CAR_WIDTH-16, opp.y+CAR_HEIGHT-14, 12, 8);
+                ctx.restore();
+            }
+        }
+        
+        function drawHUDmessages(){
+            if(!gameActive && gameWin){
+                ctx.font = "800 34px 'Orbitron'";
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = "#FFD966";
+                ctx.shadowColor = "black";
+                ctx.fillText("🏆 VICTORY 🏆", canvas.width/2-110, 80);
+                ctx.font = "bold 18px monospace";
+                ctx.fillStyle = "#eee";
+                ctx.fillText("GRAND PRIX WINNER", canvas.width/2-115, 140);
+            } else if(!gameActive && !gameWin){
+                ctx.font = "800 32px 'Orbitron'";
+                ctx.fillStyle = "#ff5555";
+                ctx.shadowBlur = 0;
+                ctx.fillText("CRASHED", canvas.width/2-80, 90);
+                ctx.font = "16px monospace";
+                ctx.fillStyle = "#ffaa88";
+                ctx.fillText("press RESTART", canvas.width/2-65, 150);
+            }
+            // lap counter in canvas corner
+            ctx.font = "bold 20px 'Orbitron'";
+            ctx.fillStyle = "#ffcc77";
+            ctx.shadowBlur = 0;
+            ctx.fillText("LAP "+currentLap+"/3", 18, 48);
+        }
+        
+        // helper: roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.moveTo(x+r, y);
+                this.lineTo(x+w-r, y);
+                this.quadraticCurveTo(x+w, y, x+w, y+r);
+                this.lineTo(x+w, y+h-r);
+                this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+                this.lineTo(x+r, y+h);
+                this.quadraticCurveTo(x, y+h, x, y+h-r);
+                this.lineTo(x, y+r);
+                this.quadraticCurveTo(x, y, x+r, y);
+                return this;
+            };
+        }
+        
+        // ----- RENDER LOOP -----
+        function render(){
+            drawRoad();
+            drawOpponents();
+            drawPlayerCar();
+            drawHUDmessages();
+        }
+        
+        // ----- GAME LOOP (update + render)-----
+        let lastTimestamp = 0;
+        function gameLoop(){
+            updateGame();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // ----- HANDLE LANE SWITCH (buttons + keyboard)
+        function moveLeft(){
+            if(!gameActive) return;
+            if(playerLane > 0){
+                playerLane--;
+                updatePlayerXFromLane();
+                // slight audio feel (vibration optional) but none needed
+            }
+        }
+        
+        function moveRight(){
+            if(!gameActive) return;
+            if(playerLane < LANE_COUNT-1){
+                playerLane++;
+                updatePlayerXFromLane();
+            }
+        }
+        
+        // ----- EVENT LISTENERS (touch + mouse + keyboard)-----
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const restart = document.getElementById('restartBtn');
+        
+        leftBtn.addEventListener('click', (e) => { e.preventDefault(); moveLeft(); });
+        rightBtn.addEventListener('click', (e) => { e.preventDefault(); moveRight(); });
+        restart.addEventListener('click', (e) => { e.preventDefault(); restartGame(); });
+        
+        // keyboard controls: arrow left / right
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowLeft') {
+                e.preventDefault();
+                moveLeft();
+            } else if(e.key === 'ArrowRight') {
+                e.preventDefault();
+                moveRight();
+            } else if(e.key === ' ' || e.key === 'Space' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                // optional - no action, but no conflict
+            }
+        });
+        
+        // touch prevention on buttons for mobile double tap zoom
+        const allBtns = [leftBtn, rightBtn, restart];
+        allBtns.forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if(btn.id === 'leftBtn') moveLeft();
+                if(btn.id === 'rightBtn') moveRight();
+                if(btn.id === 'restartBtn') restartGame();
+            });
+        });
+        
+        // initial spawn some opponents & start
+        function init(){
+            restartGame(); // fills initial opponents and state
+            gameLoop();
+        }
+        
+        init();
+    })();
 </script>
-
 </body>
 </html>
