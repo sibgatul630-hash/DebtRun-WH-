@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mercedes W05 Hybrid | Accurate 3D F1 Car | Grand Prix</title>
+    <title>Mercedes W05 Hybrid | 10 Laps | Real Corners | F1 Grand Prix</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Orbitron', monospace; touch-action: none; background: #000; }
         #hud { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; pointer-events: none; z-index: 10; text-shadow: 0 0 5px black; }
@@ -28,6 +28,7 @@
         .finish-text { font-size: 48px; color: #00D2BE; font-weight: bold; text-align: center; font-family: 'Orbitron', monospace; text-shadow: 0 0 20px #00ffaa; margin-bottom: 20px; }
         .finish-sub { font-size: 20px; color: #ffdd99; margin-bottom: 30px; }
         .finish-btn { background: #e10600; color: white; padding: 12px 32px; border-radius: 40px; font-size: 18px; border: none; cursor: pointer; font-family: monospace; font-weight: bold; pointer-events: auto; }
+        .corner-warning { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(255,50,0,0.8); padding: 5px 15px; border-radius: 30px; font-size: 14px; font-weight: bold; color: white; pointer-events: none; z-index: 10; transition: opacity 0.3s; opacity: 0; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -36,7 +37,7 @@
         <div class="telemetry-panel">
             <div class="telemetry-item"><div class="telemetry-label">SPEED</div><div class="telemetry-value" id="speedDisplay">0</div><div style="font-size:8px;">km/h</div></div>
             <div class="telemetry-item"><div class="telemetry-label">GEAR</div><div class="telemetry-value" id="gearDisplay">1</div></div>
-            <div class="telemetry-item"><div class="telemetry-label">LAP</div><div class="telemetry-value" id="lapDisplay">0/3</div></div>
+            <div class="telemetry-item"><div class="telemetry-label">LAP</div><div class="telemetry-value" id="lapDisplay">0/10</div></div>
             <div class="telemetry-item"><div class="telemetry-label">SCORE</div><div class="telemetry-value" id="scoreDisplay">0</div></div>
         </div>
         <div class="button-panel">
@@ -46,13 +47,14 @@
             <button id="boostBtn" class="boost-btn">⚡ ERS</button>
             <button id="restartBtn" class="restart-btn">⟳ RESTART</button>
         </div>
-        <div class="status-text" id="raceStatus">🏁 W05 HYBRID | 3 LAPS | OVERTAKE TO WIN 🏁</div>
+        <div class="status-text" id="raceStatus">🏁 W05 HYBRID | 10 LAPS | SMOOTH CORNERS | OVERTAKE TO WIN 🏁</div>
     </div>
     <div class="boost-bar"><div class="boost-fill" id="boostFill"></div></div>
-    <div id="instructions">← → | BRAKE (↓) | ERS (SPACE) | 3 LAPS TO VICTORY</div>
+    <div id="instructions">← → | BRAKE (↓) | ERS (SPACE) | 10 LAPS WITH CORNERS</div>
+    <div class="corner-warning" id="cornerWarning">⚠️ CORNER AHEAD ⚠️</div>
     <div id="finishOverlay" class="finish-overlay">
-        <div class="finish-text">🏆 VICTORY! 🏆</div>
-        <div class="finish-sub">GRAND PRIX WINNER</div>
+        <div class="finish-text">🏆 GRAND PRIX WINNER! 🏆</div>
+        <div class="finish-sub">10 LAPS COMPLETED - MERCEDES W05 HYBRID</div>
         <button class="finish-btn" id="finishRestartBtn">RESTART RACE</button>
     </div>
 
@@ -67,7 +69,7 @@
         // --- SCENE ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050b1a);
-        scene.fog = new THREE.FogExp2(0x050b1a, 0.003);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.002);
         
         const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -91,86 +93,104 @@
         sunLight.castShadow = true;
         scene.add(sunLight);
         
-        // --- TRACK ---
-        const trackLength = 400;
-        const trackWidth = 6.2;
-        const road = new THREE.Mesh(new THREE.PlaneGeometry(trackWidth, trackLength), new THREE.MeshStandardMaterial({ color: 0x181e2c, roughness: 0.7 }));
-        road.rotation.x = -Math.PI / 2;
-        road.position.y = -0.05;
-        road.receiveShadow = true;
-        scene.add(road);
+        // ========== TRACK WITH SMOOTH CORNERS ==========
+        // Create a curved track using a CatmullRomCurve3
+        const trackPoints = [
+            new THREE.Vector3(0, 0, -60),   // Start straight
+            new THREE.Vector3(0, 0, -30),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(3, 0, 20),    // Gentle right curve
+            new THREE.Vector3(5, 0, 40),
+            new THREE.Vector3(4, 0, 60),
+            new THREE.Vector3(0, 0, 80),    // Back straight
+            new THREE.Vector3(-4, 0, 100),  // Gentle left curve
+            new THREE.Vector3(-5, 0, 120),
+            new THREE.Vector3(-3, 0, 140),
+            new THREE.Vector3(0, 0, 160),   // Return to center
+            new THREE.Vector3(2, 0, 180),   // Chicane-like smooth
+            new THREE.Vector3(0, 0, 200),
+            new THREE.Vector3(-2, 0, 220),
+            new THREE.Vector3(0, 0, 240),
+            new THREE.Vector3(3, 0, 260),   // Final corner
+            new THREE.Vector3(0, 0, 280),   // Finish straight
+            new THREE.Vector3(0, 0, 300),
+            new THREE.Vector3(0, 0, 320),
+            new THREE.Vector3(0, 0, 340),
+            new THREE.Vector3(0, 0, 360)    // End
+        ];
         
-        // Lane lines
-        for (let i = -1.9; i <= 1.9; i += 1.9) {
-            const line = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, trackLength), new THREE.MeshStandardMaterial({ color: 0xffcc55 }));
-            line.position.set(i, 0, 0);
-            scene.add(line);
+        const curve = new THREE.CatmullRomCurve3(trackPoints);
+        curve.curveType = 'centripetal';
+        curve.closed = true;  // Make it a circuit
+        
+        // Generate track mesh
+        const tubeGeometry = new THREE.TubeGeometry(curve, 300, 3.2, 12, true);
+        const trackMat = new THREE.MeshStandardMaterial({ color: 0x1a1f2e, roughness: 0.6, metalness: 0.1 });
+        const trackMesh = new THREE.Mesh(tubeGeometry, trackMat);
+        trackMesh.receiveShadow = true;
+        trackMesh.castShadow = true;
+        scene.add(trackMesh);
+        
+        // Add track lines (kerbs) on edges
+        const kerbMat = new THREE.MeshStandardMaterial({ color: 0xcc3333 });
+        const kerbMatWhite = new THREE.MeshStandardMaterial({ color: 0xdddddd });
+        
+        // Track edge lines (visual only)
+        const edgePoints = [];
+        for (let t = 0; t <= 1; t += 0.01) {
+            const point = curve.getPoint(t);
+            edgePoints.push(point);
         }
         
-        // Dashes
-        const dashes = [];
-        for (let z = -trackLength/2 + 1; z < trackLength/2; z += 1.7) {
-            const dash = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.7), new THREE.MeshStandardMaterial({ color: 0xffaa66 }));
-            dash.position.set(0, 0.02, z);
-            dash.castShadow = true;
-            scene.add(dash);
-            dashes.push(dash);
+        // Add decorative grass area
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x2c5a2a });
+        const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(80, 450), groundMat);
+        groundPlane.rotation.x = -Math.PI / 2;
+        groundPlane.position.y = -0.2;
+        groundPlane.position.z = 150;
+        groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+        
+        // Trees around the track
+        const treeMat = new THREE.MeshStandardMaterial({ color: 0x5c9e3a });
+        for (let i = -200; i <= 400; i += 25) {
+            for (let side = -1; side <= 1; side += 2) {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 1.5, 4), treeMat);
+                trunk.position.set(side * 9, 0, i);
+                trunk.castShadow = true;
+                scene.add(trunk);
+            }
         }
         
-        // Grass
-        const grassMat = new THREE.MeshStandardMaterial({ color: 0x2c5a2a });
-        const leftGrass = new THREE.Mesh(new THREE.PlaneGeometry(4.5, trackLength), grassMat);
-        leftGrass.rotation.x = -Math.PI/2;
-        leftGrass.position.set(-4.7, -0.08, 0);
-        scene.add(leftGrass);
-        const rightGrass = new THREE.Mesh(new THREE.PlaneGeometry(4.5, trackLength), grassMat);
-        rightGrass.rotation.x = -Math.PI/2;
-        rightGrass.position.set(4.7, -0.08, 0);
-        scene.add(rightGrass);
-        
-        // Trees
-        for (let z = -150; z <= 150; z += 14) {
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.4, 4), grassMat);
-            trunk.position.set(-6.0, 0, z);
-            trunk.castShadow = true;
-            scene.add(trunk);
-            const trunk2 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.4, 4), grassMat);
-            trunk2.position.set(6.0, 0, z);
-            trunk2.castShadow = true;
-            scene.add(trunk2);
-        }
-        
-        // ========== ACCURATE MERCEDES W05 HYBRID (Based on real specs: 4800mm x 1800mm x 950mm) ==========
-        // Scale: 1 unit = 1 meter, so car is ~4.8 units long
+        // ========== MERCEDES W05 HYBRID CAR (Based on real specs) ==========
         const car = new THREE.Group();
         
-        // Main chassis (carbon fiber monocoque)
+        // Main chassis
         const chassisMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.85, roughness: 0.25 });
         const monocoque = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.38, 2.4), chassisMat);
         monocoque.castShadow = true;
         monocoque.position.y = 0.15;
         car.add(monocoque);
         
-        // Engine cover (sleek, compact due to split-turbo design)
+        // Engine cover
         const engineMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.8 });
         const engineCover = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.62, 1.1, 16), engineMat);
         engineCover.position.set(0, 0.32, -0.85);
         engineCover.castShadow = true;
         car.add(engineCover);
         
-        // Nose section (U-shaped nose with inverted crash structure)
+        // Nose section (U-shaped)
         const noseMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.75 });
         const noseBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, 1.15, 12), noseMat);
         noseBase.rotation.x = 0.15;
         noseBase.position.set(0, 0.18, 1.35);
         car.add(noseBase);
         
-        // U-shaped nose tip (characteristic of W05)
         const noseTip = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.45), noseMat);
         noseTip.position.set(0, 0.12, 1.85);
         car.add(noseTip);
         
-        // Front wing (narrower per 2014 rules - 1650mm)
+        // Front wing
         const wingMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7 });
         const frontWingMain = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.08, 0.42), wingMat);
         frontWingMain.position.set(0, 0.06, 2.05);
@@ -180,16 +200,7 @@
         frontWingUpper.position.set(0, 0.15, 2.1);
         car.add(frontWingUpper);
         
-        // Wing endplates
-        const endplateMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-        const leftEndplate = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.55), endplateMat);
-        leftEndplate.position.set(-0.68, 0.12, 2.02);
-        car.add(leftEndplate);
-        const rightEndplate = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.55), endplateMat);
-        rightEndplate.position.set(0.68, 0.12, 2.02);
-        car.add(rightEndplate);
-        
-        // Sidepods (with undercut for airflow)
+        // Sidepods
         const podMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.7 });
         const leftPod = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.28, 1.35), podMat);
         leftPod.position.set(-0.85, 0.12, -0.25);
@@ -199,17 +210,6 @@
         rightPod.position.set(0.85, 0.12, -0.25);
         rightPod.castShadow = true;
         car.add(rightPod);
-        
-        // Shark gills (Mercedes signature)
-        const gillMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-        for (let i = 0; i < 5; i++) {
-            const gillL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.15), gillMat);
-            gillL.position.set(-1.08, 0.22, -0.55 + i * 0.22);
-            car.add(gillL);
-            const gillR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.15), gillMat);
-            gillR.position.set(1.08, 0.22, -0.55 + i * 0.22);
-            car.add(gillR);
-        }
         
         // Cockpit and Halo
         const cockpitMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
@@ -230,13 +230,13 @@
         haloTop.position.set(0, 0.66, -0.12);
         car.add(haloTop);
         
-        // Driver helmet
+        // Helmet
         const helmetMat = new THREE.MeshStandardMaterial({ color: 0x00D2BE });
         const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), helmetMat);
         helmet.position.set(0, 0.48, 0.05);
         car.add(helmet);
         
-        // Rear wing (layered, central exhaust exit)
+        // Rear wing
         const rearWingMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.75 });
         const rearMain = new THREE.Mesh(new THREE.BoxGeometry(1.08, 0.14, 0.42), rearWingMat);
         rearMain.position.set(0, 0.48, -1.45);
@@ -245,21 +245,7 @@
         rearUpper.position.set(0, 0.68, -1.48);
         car.add(rearUpper);
         
-        // Rear wing endplates
-        const rearEndplateL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.48), endplateMat);
-        rearEndplateL.position.set(-0.62, 0.38, -1.44);
-        car.add(rearEndplateL);
-        const rearEndplateR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.48), endplateMat);
-        rearEndplateR.position.set(0.62, 0.38, -1.44);
-        car.add(rearEndplateR);
-        
-        // Central exhaust exit
-        const exhaustMat = new THREE.MeshStandardMaterial({ color: 0xcc8844, metalness: 0.9 });
-        const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.2, 8), exhaustMat);
-        exhaust.position.set(0, 0.28, -1.32);
-        car.add(exhaust);
-        
-        // Wheels (Pirelli)
+        // Wheels
         const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
         const rimMat = new THREE.MeshStandardMaterial({ color: 0xCCAA77, metalness: 0.8 });
         const wheelPos = [[-0.78, 0.1, 1.05], [0.78, 0.1, 1.05], [-0.78, 0.1, -1.05], [0.78, 0.1, -1.05]];
@@ -275,7 +261,7 @@
             car.add(wheel);
         });
         
-        // Petronas teal livery elements
+        // Petronas teal stripes
         const tealMat = new THREE.MeshStandardMaterial({ color: 0x00D2BE });
         const sideStripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 1.55), tealMat);
         sideStripe.position.set(0.62, 0.28, -0.15);
@@ -283,11 +269,6 @@
         const sideStripeL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 1.55), tealMat);
         sideStripeL.position.set(-0.62, 0.28, -0.15);
         car.add(sideStripeL);
-        
-        // Engine cover teal stripe
-        const engineStripe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.05, 0.95), tealMat);
-        engineStripe.position.set(0, 0.44, -0.82);
-        car.add(engineStripe);
         
         // Number 44
         const numCanvas = document.createElement('canvas');
@@ -301,24 +282,12 @@
         numPlate.position.set(0, 0.32, -1.15);
         car.add(numPlate);
         
-        // Star logo (Mercedes star on nose)
-        const starCanvas = document.createElement('canvas');
-        starCanvas.width = 64;
-        starCanvas.height = 64;
-        const starCtx = starCanvas.getContext('2d');
-        starCtx.fillStyle = '#ffffff';
-        starCtx.font = '24px monospace';
-        starCtx.fillText("★", 24, 38);
-        const starPlate = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.03), new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(starCanvas) }));
-        starPlate.position.set(0, 0.22, 1.62);
-        car.add(starPlate);
-        
         scene.add(car);
         
-        // --- OPPONENTS ---
+        // --- OPPONENTS (6 rivals) ---
         const opponents = [];
-        const oppColors = [0xDC0000, 0x1E41FF, 0xFF8700, 0x9B30FF, 0x00AA55];
-        for (let i = 0; i < 5; i++) {
+        const oppColors = [0xDC0000, 0x1E41FF, 0xFF8700, 0x9B30FF, 0x00AA55, 0xAA00AA];
+        for (let i = 0; i < 6; i++) {
             const group = new THREE.Group();
             const oppBody = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.33, 1.75), new THREE.MeshStandardMaterial({ color: oppColors[i % oppColors.length], roughness: 0.4 }));
             oppBody.castShadow = true;
@@ -329,9 +298,7 @@
                 w.position.set(pos[0], pos[1], pos[2]);
                 group.add(w);
             });
-            const x = (Math.random() - 0.5) * 3.2;
-            const z = -35 - i * 15;
-            group.position.set(x, 0.1, z);
+            group.position.set(0, 0.1, 0);
             scene.add(group);
             
             const labelDiv = document.createElement('div');
@@ -342,15 +309,14 @@
             labelDiv.style.padding = '2px 8px';
             labelDiv.style.borderRadius = '20px';
             const label = new CSS2DObject(labelDiv);
-            label.position.set(x, 0.95, z);
             scene.add(label);
-            opponents.push({ obj: group, label: label, x: x, z: z, passed: false });
+            opponents.push({ obj: group, label: label, t: 0.05 + i * 0.03, passed: false });
         }
         
         // Stars
         const starGeo = new THREE.BufferGeometry();
         const stars = [];
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 1200; i++) {
             stars.push((Math.random() - 0.5) * 500, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 150 - 80);
         }
         starGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(stars), 3));
@@ -358,22 +324,33 @@
         
         // --- GAME STATE ---
         let gameActive = true;
-        let speed = 120;
-        let targetSpeed = 120;
+        let speed = 100;
+        let targetSpeed = 100;
         let score = 0;
         let currentLap = 0;
-        let lapProgress = 0;
-        const LAP_DISTANCE = 130;
+        let lapProgress = 0;  // Track parameter t (0 to 1)
+        const LAPS_TOTAL = 10;
         let gear = 2;
         let boost = 100;
         let boosting = false;
         let braking = false;
         let targetX = 0;
         let currentX = 0;
-        const MAX_X = 2.35;
-        const camOffset = new THREE.Vector3(0, 1.7, -6.3);
+        const MAX_X = 2.5;
         
-        // UI
+        // Corner warning system
+        let cornerWarningTimeout = null;
+        const cornerWarningEl = document.getElementById('cornerWarning');
+        
+        function showCornerWarning() {
+            cornerWarningEl.style.opacity = '1';
+            if (cornerWarningTimeout) clearTimeout(cornerWarningTimeout);
+            cornerWarningTimeout = setTimeout(() => {
+                cornerWarningEl.style.opacity = '0';
+            }, 800);
+        }
+        
+        // UI Elements
         const speedEl = document.getElementById('speedDisplay');
         const gearEl = document.getElementById('gearDisplay');
         const lapEl = document.getElementById('lapDisplay');
@@ -385,7 +362,7 @@
         function updateUI() {
             speedEl.innerText = Math.floor(speed);
             gearEl.innerText = gear;
-            lapEl.innerText = `${currentLap}/3`;
+            lapEl.innerText = `${currentLap}/${LAPS_TOTAL}`;
             scoreEl.innerText = Math.floor(score);
             boostFill.style.width = `${boost}%`;
         }
@@ -393,17 +370,30 @@
         function showVictory() { finishOverlay.classList.add('show'); }
         function hideVictory() { finishOverlay.classList.remove('show'); }
         
+        // Get position on track at parameter t
+        function getTrackPosition(t) {
+            const pos = curve.getPoint(t);
+            return pos;
+        }
+        
+        function getTrackTangent(t) {
+            const tangent = curve.getTangent(t);
+            return tangent;
+        }
+        
         let lastTime = performance.now();
-        let dashOffset = 0;
         
         function update(dt) {
             if (!gameActive) return;
             dt = Math.min(dt, 0.033);
             
-            let brakeMul = braking ? 0.42 : 1.0;
+            // Brake effect
+            let brakeMul = braking ? 0.45 : 1.0;
+            
+            // Boost effect
             let boostMul = 1.0;
             if (boosting && boost > 8 && !braking) {
-                boostMul = 1.55;
+                boostMul = 1.52;
                 boost -= dt * 24;
                 if (boost < 0) boost = 0;
             } else {
@@ -412,96 +402,124 @@
                 if (boost > 100) boost = 100;
             }
             
-            let perf = 1 + (score / 900);
-            perf = Math.min(perf, 1.45);
-            let rawTarget = 135 + (score / 14);
-            rawTarget = Math.min(rawTarget, 385);
+            // Performance based on score
+            let perf = 1 + (score / 1000);
+            perf = Math.min(perf, 1.4);
+            let rawTarget = 120 + (score / 18);
+            rawTarget = Math.min(rawTarget, 370);
             targetSpeed = rawTarget * perf * boostMul * brakeMul;
             
-            let accel = (targetSpeed - speed) * 0.085;
+            // Acceleration
+            let accel = (targetSpeed - speed) * 0.082;
             speed += accel;
-            speed = Math.max(55, Math.min(speed, 395));
+            speed = Math.max(50, Math.min(speed, 380));
             
-            if (speed > 225) gear = 6;
-            else if (speed > 175) gear = 5;
-            else if (speed > 130) gear = 4;
+            // Gear logic
+            if (speed > 220) gear = 6;
+            else if (speed > 170) gear = 5;
+            else if (speed > 125) gear = 4;
             else if (speed > 85) gear = 3;
             else if (speed > 50) gear = 2;
             else gear = 1;
             
-            let travel = speed * dt * 0.048;
+            // Lap progression on curved track
+            let travel = speed * dt * 0.0008;  // t increment per frame
             lapProgress += travel;
             
-            if (lapProgress >= LAP_DISTANCE) {
-                lapProgress -= LAP_DISTANCE;
+            // Check for corner warning (when entering a turn, t around 0.2-0.3 and 0.6-0.7)
+            const t_mod = lapProgress % 1;
+            if ((t_mod > 0.18 && t_mod < 0.28) || (t_mod > 0.55 && t_mod < 0.65) || (t_mod > 0.78 && t_mod < 0.85)) {
+                if (speed > 180) showCornerWarning();
+            }
+            
+            // Lap completion
+            if (lapProgress >= 1) {
+                lapProgress -= 1;
                 currentLap++;
-                if (currentLap >= 3) {
+                
+                if (currentLap >= LAPS_TOTAL) {
                     gameActive = false;
-                    statusEl.innerText = "🏆 VICTORY! WORLD CHAMPION! 🏆";
+                    statusEl.innerText = "🏆 GRAND PRIX WINNER! 🏆";
                     showVictory();
                 } else {
-                    score += 220;
-                    statusEl.innerText = `✅ LAP ${currentLap} COMPLETE! +220 PTS`;
+                    score += 180;
+                    statusEl.innerText = `✅ LAP ${currentLap} COMPLETE! +180 PTS`;
                     updateUI();
-                    setTimeout(() => { if (gameActive) statusEl.innerText = "🏁 OVERTAKE RIVALS! 🏁"; }, 1800);
+                    setTimeout(() => {
+                        if (gameActive) statusEl.innerText = "🏁 10 LAP RACE | OVERTAKE RIVALS 🏁";
+                    }, 1800);
                 }
                 updateUI();
             }
             
-            const playerZ = lapProgress;
-            const playerX = currentX;
+            // Get car position on track
+            const carPos = getTrackPosition(lapProgress);
+            const carTangent = getTrackTangent(lapProgress);
+            
+            // Lateral movement (perpendicular to track direction)
+            const right = new THREE.Vector3(-carTangent.z, 0, carTangent.x).normalize();
+            const lateralOffset = currentX * right;
+            
+            car.position.x = carPos.x + lateralOffset.x;
+            car.position.z = carPos.z + lateralOffset.z;
+            car.position.y = carPos.y + 0.15;
+            
+            // Car rotation to face track direction
+            const angle = Math.atan2(carTangent.x, carTangent.z);
+            car.rotation.y = angle;
+            car.rotation.z = currentX * 0.06;
+            
+            // Camera follow
+            const camOffset = new THREE.Vector3(0, 1.7, -6.5);
+            const camWorldPos = car.position.clone().add(camOffset);
+            camera.position.lerp(camWorldPos, 0.1);
+            camera.lookAt(car.position);
+            
+            // Update opponents
             for (let opp of opponents) {
-                let oppMove = speed * dt * 0.042 * 0.8;
-                opp.z += oppMove;
-                if (opp.z > playerZ + 35) {
-                    opp.z = playerZ - 40 - Math.random() * 20;
-                    opp.x = (Math.random() - 0.5) * 3.4;
-                    opp.passed = false;
-                } else if (opp.z < playerZ - 50) {
-                    opp.z = playerZ + 30;
-                    opp.x = (Math.random() - 0.5) * 3.4;
-                    opp.passed = false;
-                }
-                opp.obj.position.set(opp.x, 0.1, opp.z);
-                opp.label.position.set(opp.x, 0.95, opp.z);
-                const dx = playerX - opp.x;
-                const dz = playerZ - opp.z;
-                if (Math.abs(dx) < 0.95 && Math.abs(dz) < 1.0 && gameActive) {
+                opp.t += speed * dt * 0.00065 * 0.85;
+                if (opp.t >= 1) opp.t -= 1;
+                
+                const oppPos = getTrackPosition(opp.t);
+                const oppTangent = getTrackTangent(opp.t);
+                const oppRight = new THREE.Vector3(-oppTangent.z, 0, oppTangent.x).normalize();
+                const oppLateral = opp.t * 5 % 3 - 1.5;
+                opp.obj.position.x = oppPos.x + oppRight.x * oppLateral;
+                opp.obj.position.z = oppPos.z + oppRight.z * oppLateral;
+                opp.obj.position.y = oppPos.y + 0.1;
+                opp.label.position.copy(opp.obj.position);
+                opp.label.position.y += 0.85;
+                
+                // Collision detection
+                const dx = car.position.x - opp.obj.position.x;
+                const dz = car.position.z - opp.obj.position.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                if (dist < 0.9 && gameActive) {
                     gameActive = false;
                     statusEl.innerText = "💥 CRASH! PRESS RESTART 💥";
                 }
-                if (!opp.passed && playerZ > opp.z + 1.1 && Math.abs(dx) < 1.25) {
+                
+                // Overtake detection
+                if (!opp.passed && lapProgress > opp.t + 0.02 && lapProgress < opp.t + 0.08 && Math.abs(dx) < 1.2) {
                     opp.passed = true;
                     if (gameActive) {
-                        score += 60;
+                        score += 55;
                         updateUI();
-                        statusEl.innerText = "🏁 OVERTAKE! +60 PTS 🏁";
-                        setTimeout(() => { if (gameActive) statusEl.innerText = "🔥 KEEP PUSHING 🔥"; }, 1000);
+                        statusEl.innerText = "🏁 OVERTAKE! +55 PTS 🏁";
+                        setTimeout(() => {
+                            if (gameActive) statusEl.innerText = "🔥 10 LAPS - KEEP PUSHING 🔥";
+                        }, 1000);
                     }
                 }
+                
+                // Reset passed flag when opponent gets ahead
+                if (opp.t > lapProgress + 0.05) opp.passed = false;
             }
-            
-            dashOffset += speed * dt * 0.19;
-            dashes.forEach((dash, i) => {
-                let newZ = (i * 1.7 - trackLength/2 + dashOffset) % trackLength;
-                if (newZ > trackLength/2) newZ -= trackLength;
-                dash.position.z = newZ;
-            });
-            
-            currentX += (targetX - currentX) * 0.28;
-            currentX = Math.min(MAX_X, Math.max(-MAX_X, currentX));
-            car.position.x = currentX;
-            car.position.z = lapProgress;
-            car.rotation.z = currentX * 0.08;
-            
-            camera.position.x = car.position.x + camOffset.x;
-            camera.position.y = car.position.y + camOffset.y;
-            camera.position.z = car.position.z + camOffset.z;
-            camera.lookAt(car.position);
         }
         
-        function moveLeft() { if (gameActive) targetX = Math.max(-MAX_X, targetX - 1.55); }
-        function moveRight() { if (gameActive) targetX = Math.min(MAX_X, targetX + 1.55); }
+        // Controls
+        function moveLeft() { if (gameActive) targetX = Math.max(-MAX_X, targetX - 1.4); }
+        function moveRight() { if (gameActive) targetX = Math.min(MAX_X, targetX + 1.4); }
         function brakeOn() { if (gameActive) braking = true; }
         function brakeOff() { braking = false; }
         function useBoost() {
@@ -509,15 +527,17 @@
             if (boost >= 12 && !braking) {
                 boosting = true;
                 statusEl.innerText = "⚡ ERS BOOST ACTIVE! ⚡";
-                setTimeout(() => { if (gameActive && boosting) statusEl.innerText = "🏎️ FULL POWER 🏎️"; }, 800);
+                setTimeout(() => {
+                    if (gameActive && boosting) statusEl.innerText = "🏎️ FULL POWER 🏎️";
+                }, 800);
             } else if (boost < 12) {
                 statusEl.innerText = "⚠️ ERS CHARGING ⚠️";
             }
         }
         function restartGame() {
             gameActive = true;
-            speed = 120;
-            targetSpeed = 120;
+            speed = 110;
+            targetSpeed = 110;
             score = 0;
             currentLap = 0;
             lapProgress = 0;
@@ -529,16 +549,14 @@
             gear = 2;
             hideVictory();
             opponents.forEach((opp, i) => {
-                opp.z = -35 - i * 15;
-                opp.x = (Math.random() - 0.5) * 3.2;
+                opp.t = 0.05 + i * 0.035;
                 opp.passed = false;
-                opp.obj.position.set(opp.x, 0.1, opp.z);
-                opp.label.position.set(opp.x, 0.95, opp.z);
             });
             updateUI();
-            statusEl.innerText = "🏁 RACE RESTARTED! 3 LAPS TO WIN 🏁";
+            statusEl.innerText = "🏁 RACE RESTARTED! 10 LAPS TO WIN 🏁";
         }
         
+        // Event listeners
         document.getElementById('leftBtn').onclick = (e) => { e.preventDefault(); moveLeft(); };
         document.getElementById('rightBtn').onclick = (e) => { e.preventDefault(); moveRight(); };
         document.getElementById('brakeBtn').onmousedown = brakeOn;
@@ -566,7 +584,13 @@
             let dt = (now - lastTime) / 1000;
             lastTime = now;
             if (dt > 0.05) dt = 0.033;
+            if (dt < 0.008) dt = 0.016;
+            
             update(dt);
+            
+            // Smooth lateral movement
+            currentX += (targetX - currentX) * 0.3;
+            
             renderer.render(scene, camera);
             labelRenderer.render(scene, camera);
             requestAnimationFrame(animate);
