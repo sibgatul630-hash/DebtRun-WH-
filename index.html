@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>F1 Web Game (3D)</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="hud">
+        <div class="row">
+          <div class="pill"><span class="k">SPD</span> <span id="spd">0</span> km/h</div>
+          <div class="pill"><span class="k">GEAR</span> <span id="gear">N</span></div>
+          <div class="pill"><span class="k">LAP</span> <span id="lap">1</span>/<span id="lapTotal">3</span></div>
+          <div class="pill"><span class="k">CP</span> <span id="cp">0</span>/<span id="cpTotal">0</span></div>
+        </div>
+        <div class="row">
+          <div class="pill wide"><span class="k">TIME</span> <span id="time">0.000</span></div>
+          <div class="pill wide"><span class="k">BEST</span> <span id="best">--</span></div>
+          <div class="pill wide"><span class="k">LAST</span> <span id="last">--</span></div>
+        </div>
+        <div id="help">
+          <div><b>Controls</b>: W/S throttle/brake, A/D steer, Space handbrake, R reset, C camera</div>
+          <div><b>Tip</b>: Speed creates downforce (more grip). Brake before corners.</div>
+        </div>
+      </div>
+      <canvas id="c"></canvas>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
