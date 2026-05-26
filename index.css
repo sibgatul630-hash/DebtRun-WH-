@@ -1,0 +1,415 @@
+/* DebtRun — Premium dark theme overrides */
+
+:root {
+  --bg-deep: #0a0f14;
+  --bg-panel: #111827;
+  --bg-panel-hover: #1a2332;
+  --border-subtle: rgba(148, 163, 184, 0.12);
+  --border-glow: rgba(52, 211, 153, 0.25);
+  --text-muted: #94a3b8;
+  --emerald: #34d399;
+  --emerald-dim: #10b981;
+  --amber: #fbbf24;
+  --amber-dim: #f59e0b;
+  --violet: #a78bfa;
+  --radius: 12px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-deep);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52, 211, 153, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(251, 191, 36, 0.05), transparent);
+  color: #e2e8f0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.app-shell {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Panels */
+.panel {
+  background: linear-gradient(145deg, var(--bg-panel) 0%, #0d1320 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.panel:hover {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.panel-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Dashboard metrics */
+.metric-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.metric-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.metric-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--transition);
+}
+
+.metric-cash {
+  border-left: 3px solid var(--emerald);
+  box-shadow: inset 0 0 24px rgba(52, 211, 153, 0.04);
+}
+
+.metric-cash .metric-value {
+  color: var(--emerald);
+  text-shadow: 0 0 20px rgba(52, 211, 153, 0.35);
+}
+
+.metric-debt {
+  border-left: 3px solid var(--amber);
+  box-shadow: inset 0 0 24px rgba(251, 191, 36, 0.04);
+}
+
+.metric-debt .metric-value {
+  color: var(--amber);
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.metric-score .metric-value {
+  color: #f1f5f9;
+}
+
+.metric-util .metric-value {
+  color: #cbd5e1;
+}
+
+.metric-interest .metric-value {
+  color: #f87171;
+}
+
+.metric-pulse {
+  animation: metricPulse 0.5s ease;
+}
+
+@keyframes metricPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* Scenario */
+.month-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+}
+
+.scenario-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+
+.scenario-emergency {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.scenario-want {
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Choice buttons */
+.choice-btn {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel-hover);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition),
+    color var(--transition);
+}
+
+.choice-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.choice-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.choice-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.choice-cash:hover:not(:disabled) {
+  border-color: rgba(52, 211, 153, 0.5);
+  background: rgba(52, 211, 153, 0.1);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+  color: var(--emerald);
+}
+
+.choice-credit:hover:not(:disabled) {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.1);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.12);
+  color: var(--amber);
+}
+
+.choice-bnpl:hover:not(:disabled) {
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(167, 139, 250, 0.1);
+  color: var(--violet);
+}
+
+.choice-avoid:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+/* AI Coach */
+.coach-panel {
+  border-color: rgba(52, 211, 153, 0.15);
+  background: linear-gradient(145deg, #0f172a 0%, #0c1220 100%);
+}
+
+.coach-feed {
+  min-height: 4rem;
+}
+
+.coach-message {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid var(--emerald);
+  border-radius: 0 8px 8px 0;
+  animation: coachSlide 0.4s ease;
+}
+
+.coach-message.warning {
+  border-left-color: var(--amber);
+}
+
+.coach-message.danger {
+  border-left-color: #f87171;
+}
+
+@keyframes coachSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Chart */
+.chart-container {
+  position: relative;
+  height: 260px;
+  width: 100%;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-cash {
+  background: var(--emerald);
+  box-shadow: 0 0 8px var(--emerald);
+}
+
+.legend-debt {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+}
+
+/* Journal */
+.journal-scroll {
+  max-height: 280px;
+}
+
+.journal-table {
+  border-collapse: collapse;
+}
+
+.journal-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #111827;
+}
+
+.journal-table th {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.journal-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+  color: #cbd5e1;
+  font-variant-numeric: tabular-nums;
+}
+
+.journal-table tbody tr {
+  transition: background var(--transition);
+}
+
+.journal-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.journal-table .delta-positive {
+  color: var(--emerald);
+}
+
+.journal-table .delta-negative {
+  color: #f87171;
+}
+
+/* Custom scrollbar — journal */
+.journal-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.journal-scroll::-webkit-scrollbar-track {
+  background: #0a0f14;
+  border-radius: 4px;
+}
+
+.journal-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #334155, #1e293b);
+  border-radius: 4px;
+  border: 2px solid #0a0f14;
+}
+
+.journal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.journal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0a0f14;
+}
+
+/* Summary */
+.summary-panel {
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 40px rgba(52, 211, 153, 0.08);
+}
+
+.summary-panel ul {
+  list-style: none;
+  padding: 0;
+}
+
+.summary-panel li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+#personality-grade {
+  background: linear-gradient(90deg, var(--emerald), var(--amber));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Game over state */
+.game-frozen .interaction-panel {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Feedback flash */
+.feedback-success {
+  color: var(--emerald) !important;
+}
+
+.feedback-warning {
+  color: var(--amber) !important;
+}
+
+.feedback-error {
+  color: #f87171 !important;
+}
